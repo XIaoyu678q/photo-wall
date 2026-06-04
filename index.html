@@ -1,958 +1,707 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>📸 照片墙</title>
-    <style>
-        /* =============================================
-           照片墙 — 重构版（高级感 · 瀑布流 · 骨架屏）
-           ============================================= */
-
-        /* ---------- CSS 变量（全局主题） ---------- */
-        :root {
-            /* 色彩系统 — 低饱和、高级感 */
-            --color-bg: #f7f7f9;
-            --color-surface: #ffffff;
-            --color-text-primary: #1a1a2e;
-            --color-text-secondary: #6b7280;
-            --color-text-muted: #9ca3af;
-            --color-accent: #4f46e5;
-            --color-accent-light: #818cf8;
-            --color-accent-dark: #3730a3;
-            --color-border: #e5e7eb;
-            --color-overlay: rgba(0, 0, 0, 0.75);
-
-            /* 间距系统 */
-            --gap-xs: 4px;
-            --gap-sm: 8px;
-            --gap-md: 16px;
-            --gap-lg: 24px;
-            --gap-xl: 32px;
-
-            /* 圆角 */
-            --radius-sm: 6px;
-            --radius-md: 12px;
-            --radius-lg: 20px;
-            --radius-full: 9999px;
-
-            /* 阴影 */
-            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
-            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
-            --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.14);
-            --shadow-xl: 0 20px 60px rgba(0, 0, 0, 0.2);
-
-            /* 字体 */
-            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif;
-            --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
-
-            /* 过渡 */
-            --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            --transition-base: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-            --transition-slow: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-
-            /* 布局 */
-            --container-max: 1320px;
-            --columns: 4;
-            --column-gap: 20px;
-        }
-
-        /* ---------- 基础重置 ---------- */
-        *,
-        *::before,
-        *::after {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        html {
-            scroll-behavior: smooth;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
-
-        body {
-            font-family: var(--font-sans);
-            background: var(--color-bg);
-            color: var(--color-text-primary);
-            line-height: 1.7;
-            min-height: 100vh;
-        }
-
-        img {
-            display: block;
-            max-width: 100%;
-        }
-
-        /* ---------- 容器 ---------- */
-        .container {
-            max-width: var(--container-max);
-            margin: 0 auto;
-            padding: 0 var(--gap-lg);
-        }
-
-        /* ================================
-               头部 — 毛玻璃暗色质感
-               ================================ */
-        .header {
-            position: relative;
-            isolation: isolate;
-            padding: 80px 20px 70px;
-            text-align: center;
-            overflow: hidden;
-        }
-
-        /* 背景：深色渐变 + 毛玻璃 */
-        .header::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            z-index: -2;
-            background:
-                radial-gradient(ellipse 80% 60% at 50% 20%, #2d2a5e 0%, transparent 70%),
-                radial-gradient(ellipse 60% 50% at 80% 80%, #1e1b4b 0%, transparent 60%),
-                linear-gradient(145deg, #0f0c29 0%, #1a1a3e 40%, #242250 100%);
-        }
-
-        /* 磨砂粒子叠加层 */
-        .header::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            z-index: -1;
-            backdrop-filter: blur(2px);
-            background: radial-gradient(circle at 30% 40%, rgba(255, 255, 255, 0.03) 0%, transparent 60%);
-        }
-
-        .header-icon {
-            font-size: 3rem;
-            display: block;
-            margin-bottom: 12px;
-            animation: floatY 3s ease-in-out infinite;
-        }
-
-        .site-title {
-            font-size: 3.2rem;
-            font-weight: 300;
-            letter-spacing: 6px;
-            color: rgba(255, 255, 255, 0.92);
-            margin-bottom: 10px;
-            animation: fadeDown 0.8s ease both;
-        }
-
-        .site-title strong {
-            font-weight: 600;
-        }
-
-        .site-desc {
-            font-size: 1.05rem;
-            font-weight: 300;
-            letter-spacing: 4px;
-            color: rgba(255, 255, 255, 0.55);
-            animation: fadeUp 0.8s ease 0.2s both;
-        }
-
-        /* 头部底部装饰线 */
-        .header-divider {
-            width: 60px;
-            height: 1px;
-            background: rgba(255, 255, 255, 0.2);
-            margin: 20px auto 0;
-            animation: fadeUp 0.8s ease 0.35s both;
-        }
-
-        /* ================================
-               筛选导航
-               ================================ */
-        .filters {
-            padding: 22px 0 18px;
-            text-align: center;
-            background: rgba(255, 255, 255, 0.75);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            position: sticky;
-            top: 0;
-            z-index: 50;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.04);
-        }
-
-        .filter-btn {
-            display: inline-block;
-            border: 1.5px solid var(--color-border);
-            background: transparent;
-            color: var(--color-text-secondary);
-            padding: 7px 22px;
-            margin: 4px 5px;
-            border-radius: var(--radius-full);
-            font-size: 0.875rem;
-            font-weight: 500;
-            font-family: var(--font-sans);
-            letter-spacing: 0.5px;
-            cursor: pointer;
-            transition:
-                background var(--transition-fast),
-                color var(--transition-fast),
-                border-color var(--transition-fast),
-                box-shadow var(--transition-fast),
-                transform var(--transition-fast);
-            user-select: none;
-        }
-
-        .filter-btn:hover {
-            border-color: var(--color-accent-light);
-            color: var(--color-accent);
-            transform: translateY(-1px);
-        }
-
-        .filter-btn.active {
-            background: var(--color-accent);
-            color: #fff;
-            border-color: var(--color-accent);
-            box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
-        }
-
-        .filter-btn.active:hover {
-            background: var(--color-accent-dark);
-            border-color: var(--color-accent-dark);
-            box-shadow: 0 4px 18px rgba(79, 70, 229, 0.45);
-        }
-
-        /* ================================
-               瀑布流网格
-               ================================ */
-        .gallery {
-            padding: var(--gap-xl) 0 60px;
-        }
-
-        .gallery-grid {
-            columns: var(--columns);
-            column-gap: var(--column-gap);
-            padding: 0;
-        }
-
-        /* 每个照片卡片 */
-        .gallery-item {
-            break-inside: avoid;
-            margin-bottom: var(--column-gap);
-            border-radius: var(--radius-md);
-            overflow: hidden;
-            position: relative;
-            cursor: pointer;
-            background: var(--color-surface);
-            box-shadow: var(--shadow-sm);
-            transition:
-                transform var(--transition-base),
-                box-shadow var(--transition-base);
-            animation: cardIn 0.6s ease both;
-        }
-
-        .gallery-item:hover {
-            transform: translateY(-6px) scale(1.01);
-            box-shadow: var(--shadow-lg);
-        }
-
-        /* ---------- 图片容器（用于骨架屏定位） ---------- */
-        .gallery-item .img-wrapper {
-            position: relative;
-            overflow: hidden;
-            line-height: 0;
-        }
-
-        .gallery-item img {
-            width: 100%;
-            height: auto;
-            display: block;
-            transition: transform var(--transition-slow);
-        }
-
-        .gallery-item:hover img {
-            transform: scale(1.08);
-        }
-
-        /* ================================
-               骨架屏（Skeleton Loading）
-               ================================ */
-        /* 骨架屏占位块 — 自带呼吸灯动画 */
-        .skeleton {
-            background: #e8e8ec;
-            border-radius: var(--radius-md);
-            animation: shimmer 1.6s ease-in-out infinite;
-            background-image: linear-gradient(
-                90deg,
-                #e8e8ec 0%,
-                #f0f0f4 40%,
-                #e8e8ec 80%
-            );
-            background-size: 200% 100%;
-        }
-
-        /* 骨架屏适配不同图片比例 */
-        .skeleton-portrait {
-            aspect-ratio: 3 / 4;
-        }
-        .skeleton-landscape {
-            aspect-ratio: 4 / 3;
-        }
-        .skeleton-square {
-            aspect-ratio: 1 / 1;
-        }
-        .skeleton-wide {
-            aspect-ratio: 16 / 9;
-        }
-        .skeleton-tall {
-            aspect-ratio: 2 / 3;
-        }
-
-        /* 图片加载完成后隐藏骨架屏 */
-        .img-wrapper.loaded .skeleton {
-            display: none;
-        }
-
-        /* ================================
-               悬浮覆盖层
-               ================================ */
-        .gallery-item .overlay {
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(
-                to top,
-                rgba(0, 0, 0, 0.7) 0%,
-                rgba(0, 0, 0, 0.3) 40%,
-                transparent 65%
-            );
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            padding: 30px 18px 18px;
-            opacity: 0;
-            transition: opacity var(--transition-base);
-        }
-
-        .gallery-item:hover .overlay {
-            opacity: 1;
-        }
-
-        .overlay .photo-title {
-            font-size: 0.95rem;
-            font-weight: 500;
-            color: #fff;
-            letter-spacing: 0.5px;
-            transform: translateY(8px);
-            transition: transform var(--transition-base);
-        }
-
-        .gallery-item:hover .overlay .photo-title {
-            transform: translateY(0);
-        }
-
-        .overlay .photo-tag {
-            display: inline-block;
-            font-size: 0.7rem;
-            font-weight: 400;
-            letter-spacing: 0.3px;
-            color: rgba(255, 255, 255, 0.7);
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(4px);
-            padding: 2px 10px;
-            border-radius: var(--radius-full);
-            margin-top: 6px;
-            width: fit-content;
-            transform: translateY(8px);
-            transition: transform var(--transition-base);
-        }
-
-        .gallery-item:hover .overlay .photo-tag {
-            transform: translateY(0);
-        }
-
-        .overlay .view-hint {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) scale(0.8);
-            color: #fff;
-            font-size: 0.85rem;
-            letter-spacing: 1px;
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 10px 22px;
-            border-radius: var(--radius-full);
-            opacity: 0;
-            transition:
-                opacity var(--transition-base),
-                transform var(--transition-base);
-            pointer-events: none;
-        }
-
-        .gallery-item:hover .overlay .view-hint {
-            opacity: 1;
-            transform: translate(-50%, -50%) scale(1);
-        }
-
-        /* ================================
-               Lightbox 全屏查看器
-               ================================ */
-        .lightbox {
-            position: fixed;
-            inset: 0;
-            z-index: 999;
-            background: var(--color-overlay);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity var(--transition-base);
-        }
-
-        .lightbox.open {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        .lightbox-inner {
-            position: relative;
-            max-width: 88vw;
-            max-height: 88vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            transform: scale(0.92);
-            transition: transform var(--transition-base);
-        }
-
-        .lightbox.open .lightbox-inner {
-            transform: scale(1);
-        }
-
-        .lightbox-inner img {
-            max-width: 100%;
-            max-height: 78vh;
-            border-radius: var(--radius-md);
-            box-shadow: var(--shadow-xl);
-            object-fit: contain;
-            user-select: none;
-            -webkit-user-drag: none;
-        }
-
-        .lightbox-info {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-            padding: 14px 4px 0;
-            color: rgba(255, 255, 255, 0.75);
-            font-size: 0.85rem;
-            letter-spacing: 0.5px;
-        }
-
-        .lightbox-info .lb-title {
-            font-weight: 400;
-        }
-
-        .lightbox-info .lb-counter {
-            font-weight: 300;
-            font-size: 0.8rem;
-            color: rgba(255, 255, 255, 0.45);
-        }
-
-        /* 关闭按钮 */
-        .lb-close {
-            position: absolute;
-            top: -48px;
-            right: -8px;
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 2rem;
-            cursor: pointer;
-            transition:
-                color var(--transition-fast),
-                transform var(--transition-fast);
-            line-height: 1;
-            background: none;
-            border: none;
-            font-family: var(--font-sans);
-        }
-
-        .lb-close:hover {
-            color: #fff;
-            transform: rotate(90deg);
-        }
-
-        /* 导航箭头 */
-        .lb-nav {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 1.4rem;
-            padding: 14px 10px;
-            cursor: pointer;
-            border-radius: var(--radius-sm);
-            transition:
-                background var(--transition-fast),
-                color var(--transition-fast);
-            z-index: 10;
-            font-family: var(--font-sans);
-            line-height: 1;
-        }
-
-        .lb-nav:hover {
-            background: rgba(255, 255, 255, 0.14);
-            color: #fff;
-        }
-
-        .lb-prev {
-            left: -60px;
-        }
-        .lb-next {
-            right: -60px;
-        }
-
-        /* 键盘提示 */
-        .lb-hint {
-            position: absolute;
-            bottom: -36px;
-            color: rgba(255, 255, 255, 0.2);
-            font-size: 0.7rem;
-            letter-spacing: 1px;
-            font-weight: 300;
-        }
-
-        /* ================================
-               页脚
-               ================================ */
-        .footer {
-            text-align: center;
-            padding: 30px 20px 40px;
-            color: var(--color-text-muted);
-            font-size: 0.8rem;
-            letter-spacing: 1px;
-            font-weight: 300;
-            border-top: 1px solid var(--color-border);
-        }
-
-        /* ================================
-               动画关键帧
-               ================================ */
-        @keyframes fadeDown {
-            from {
-                opacity: 0;
-                transform: translateY(-24px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes fadeUp {
-            from {
-                opacity: 0;
-                transform: translateY(24px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes cardIn {
-            from {
-                opacity: 0;
-                transform: translateY(30px) scale(0.97);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-
-        /* 呼吸灯骨架屏 */
-        @keyframes shimmer {
-            0% {
-                background-position: 200% 0;
-            }
-            100% {
-                background-position: -200% 0;
-            }
-        }
-
-        /* 图标浮动 */
-        @keyframes floatY {
-            0%,
-            100% {
-                transform: translateY(0);
-            }
-            50% {
-                transform: translateY(-8px);
-            }
-        }
-
-        /* ================================
-               响应式
-               ================================ */
-        @media (max-width: 1100px) {
-            :root {
-                --columns: 3;
-            }
-        }
-
-        @media (max-width: 768px) {
-            :root {
-                --columns: 2;
-                --column-gap: 14px;
-            }
-            .header {
-                padding: 50px 16px 44px;
-            }
-            .site-title {
-                font-size: 2.2rem;
-                letter-spacing: 4px;
-            }
-            .site-desc {
-                font-size: 0.9rem;
-                letter-spacing: 2px;
-            }
-            .filter-btn {
-                padding: 5px 16px;
-                font-size: 0.8rem;
-                margin: 3px 3px;
-            }
-            .lb-prev {
-                left: 8px;
-            }
-            .lb-next {
-                right: 8px;
-            }
-            .lb-nav {
-                font-size: 1.1rem;
-                padding: 10px 7px;
-            }
-            .lb-close {
-                top: -42px;
-                right: 0;
-                font-size: 1.6rem;
-            }
-        }
-
-        @media (max-width: 480px) {
-            :root {
-                --columns: 1;
-                --column-gap: 12px;
-            }
-            .site-title {
-                font-size: 1.8rem;
-            }
-            .filters {
-                padding: 14px 0 10px;
-            }
-        }
-
-        /* ---------- 首屏加载时的淡入 ---------- */
-        .gallery-item {
-            opacity: 0;
-            animation: cardIn 0.55s ease forwards;
-        }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>📸 照片墙</title>
+<style>
+/* =============================================
+   照片墙 — 互动版（3D倾角 · 鼠标追踪 · 动感网格）
+   ============================================= */
+
+/* ---------- CSS 变量 ---------- */
+:root {
+    --color-bg: #f4f4f6;
+    --color-surface: #ffffff;
+    --color-text: #1a1a2e;
+    --color-text-light: #6b7280;
+    --color-text-muted: #9ca3af;
+    --color-accent: #4f46e5;
+    --color-accent-glow: rgba(79,70,229,0.3);
+    --color-border: rgba(0,0,0,0.06);
+    --color-overlay: rgba(0,0,0,0.78);
+
+    --gap: 18px;
+    --radius-card: 14px;
+    --radius-pill: 9999px;
+
+    --shadow-card: 0 2px 8px rgba(0,0,0,0.06);
+    --shadow-hover: 0 20px 50px rgba(0,0,0,0.18);
+
+    --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+
+    --transition: 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    --transition-fast: 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+
+body {
+    font-family: var(--font);
+    background: var(--color-bg);
+    color: var(--color-text);
+    line-height: 1.7;
+    overflow-x: hidden;
+}
+
+img { display: block; max-width: 100%; }
+
+/* ================================
+   鼠标跟随光晕
+   ================================ */
+#cursorGlow {
+    position: fixed;
+    width: 400px;
+    height: 400px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(79,70,229,0.08) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 1;
+    transform: translate(-50%, -50%);
+    transition: opacity 0.4s ease;
+    will-change: transform;
+}
+
+/* ================================
+   头部 — 暗色质感 + 视差
+   ================================ */
+.header {
+    position: relative;
+    isolation: isolate;
+    padding: 90px 20px 75px;
+    text-align: center;
+    overflow: hidden;
+}
+
+.header-bg {
+    position: absolute;
+    inset: -40px;
+    z-index: -2;
+    background:
+        radial-gradient(ellipse 70% 50% at 50% 20%, #2d2a5e 0%, transparent 70%),
+        radial-gradient(ellipse 50% 40% at 80% 80%, #1e1b4b 0%, transparent 60%),
+        linear-gradient(145deg, #0f0c29, #1a1a3e 45%, #242250);
+}
+
+.header-noise {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    opacity: 0.04;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
+
+.header-icon {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 10px;
+    animation: floatY 3s ease-in-out infinite;
+}
+
+.site-title {
+    font-size: 3.4rem;
+    font-weight: 200;
+    letter-spacing: 8px;
+    color: rgba(255,255,255,0.92);
+}
+
+.site-title strong { font-weight: 600; letter-spacing: 2px; }
+
+.site-desc {
+    font-size: 1rem;
+    font-weight: 300;
+    letter-spacing: 5px;
+    color: rgba(255,255,255,0.4);
+    margin-top: 8px;
+}
+
+/* ================================
+   筛选栏
+   ================================ */
+.filters {
+    padding: 20px 0 16px;
+    text-align: center;
+    background: rgba(255,255,255,0.72);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    border-bottom: 1px solid var(--color-border);
+}
+
+/* 磁性按钮 — 鼠标靠近时略微移动 */
+.filter-btn {
+    position: relative;
+    display: inline-block;
+    border: 1.5px solid #e5e7eb;
+    background: transparent;
+    color: var(--color-text-light);
+    padding: 7px 22px;
+    margin: 4px 5px;
+    border-radius: var(--radius-pill);
+    font-size: 0.875rem;
+    font-weight: 500;
+    font-family: var(--font);
+    letter-spacing: 0.3px;
+    cursor: pointer;
+    transition: background var(--transition-fast), color var(--transition-fast),
+                border-color var(--transition-fast), box-shadow var(--transition-fast);
+    user-select: none;
+}
+
+.filter-btn:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+}
+
+.filter-btn.active {
+    background: var(--color-accent);
+    color: #fff;
+    border-color: var(--color-accent);
+    box-shadow: 0 4px 16px rgba(79,70,229,0.35);
+}
+
+/* ================================
+   照片网格 — Grid + 动态交错
+   ================================ */
+.gallery {
+    padding: var(--gap) 0 50px;
+    position: relative;
+    z-index: 2;
+}
+
+.gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--gap);
+    padding: var(--gap) 0;
+}
+
+/* 照片卡片 */
+.gallery-item {
+    position: relative;
+    border-radius: var(--radius-card);
+    overflow: hidden;
+    cursor: pointer;
+    background: var(--color-surface);
+    box-shadow: var(--shadow-card);
+    /* 3D 透视由 JS 动态控制 */
+    transform-style: preserve-3d;
+    will-change: transform;
+    transition: box-shadow var(--transition);
+    animation: cardIn 0.5s ease both;
+}
+
+/* 内部反射光泽层（跟随鼠标） */
+.gallery-item .gloss {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+    border-radius: inherit;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.25) 0%, transparent 60%);
+}
+
+.gallery-item:hover .gloss {
+    opacity: 1;
+}
+
+/* 图片容器 */
+.gallery-item .img-wrapper {
+    position: relative;
+    overflow: hidden;
+    line-height: 0;
+    border-radius: inherit;
+}
+
+.gallery-item img {
+    width: 100%;
+    height: auto;
+    display: block;
+    transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.gallery-item:hover img {
+    transform: scale(1.1);
+}
+
+/* ---------- 骨架屏 ---------- */
+.skeleton {
+    background: #e8e8ec;
+    animation: shimmer 1.6s ease-in-out infinite;
+    background-image: linear-gradient(90deg, #e8e8ec 0%, #f2f2f6 40%, #e8e8ec 80%);
+    background-size: 200% 100%;
+}
+.skeleton-h { aspect-ratio: 3/2; }
+.skeleton-v { aspect-ratio: 2/3; }
+.skeleton-sq { aspect-ratio: 1/1; }
+.skeleton-w { aspect-ratio: 16/9; }
+
+.img-wrapper.loaded .skeleton { display: none; }
+
+/* ---------- 悬浮覆盖层 ---------- */
+.gallery-item .overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.15) 40%, transparent 60%);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 28px 16px 16px;
+    opacity: 0;
+    transition: opacity var(--transition);
+}
+
+.gallery-item:hover .overlay { opacity: 1; }
+
+.overlay .photo-title {
+    color: #fff;
+    font-size: 0.9rem;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    transform: translateY(10px);
+    transition: transform var(--transition);
+}
+
+.gallery-item:hover .photo-title { transform: translateY(0); }
+
+.overlay .photo-tag {
+    display: inline-block;
+    font-size: 0.65rem;
+    color: rgba(255,255,255,0.6);
+    background: rgba(255,255,255,0.12);
+    backdrop-filter: blur(4px);
+    padding: 2px 10px;
+    border-radius: var(--radius-pill);
+    margin-top: 5px;
+    width: fit-content;
+    transform: translateY(10px);
+    transition: transform var(--transition);
+}
+
+.gallery-item:hover .photo-tag { transform: translateY(0); }
+
+.overlay .view-hint {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.85);
+    color: #fff;
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.15);
+    padding: 9px 20px;
+    border-radius: var(--radius-pill);
+    opacity: 0;
+    transition: opacity var(--transition), transform var(--transition);
+    pointer-events: none;
+}
+
+.gallery-item:hover .view-hint { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+
+/* ================================
+   Lightbox
+   ================================ */
+.lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    background: var(--color-overlay);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+}
+
+.lightbox.open { opacity: 1; pointer-events: auto; }
+
+.lightbox-inner {
+    position: relative;
+    max-width: 88vw;
+    max-height: 88vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transform: scale(0.9);
+    transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.lightbox.open .lightbox-inner { transform: scale(1); }
+
+.lightbox-inner img {
+    max-width: 100%;
+    max-height: 78vh;
+    border-radius: var(--radius-card);
+    box-shadow: 0 25px 80px rgba(0,0,0,0.5);
+    object-fit: contain;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+.lightbox-info {
+    display: flex; justify-content: space-between; align-items: center;
+    width: 100%; padding: 14px 4px 0;
+    color: rgba(255,255,255,0.7); font-size: 0.85rem;
+}
+
+.lb-counter { font-size: 0.8rem; color: rgba(255,255,255,0.4); }
+
+.lb-close {
+    position: absolute; top: -48px; right: -6px;
+    color: rgba(255,255,255,0.5); font-size: 2.2rem; line-height: 1;
+    cursor: pointer; background: none; border: none; font-family: var(--font);
+    transition: color var(--transition-fast), transform var(--transition-fast);
+}
+.lb-close:hover { color: #fff; transform: rotate(90deg) scale(1.1); }
+
+.lb-nav {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.5); font-size: 1.3rem;
+    padding: 14px 10px; cursor: pointer; border-radius: 8px; line-height: 1;
+    transition: background var(--transition-fast), color var(--transition-fast);
+    font-family: var(--font);
+}
+.lb-nav:hover { background: rgba(255,255,255,0.12); color: #fff; }
+.lb-prev { left: -56px; }
+.lb-next { right: -56px; }
+
+.lb-hint {
+    position: absolute; bottom: -34px;
+    color: rgba(255,255,255,0.15); font-size: 0.65rem; letter-spacing: 1px;
+    font-weight: 300;
+}
+
+/* ================================
+   页脚
+   ================================ */
+.footer {
+    text-align: center; padding: 28px 20px 36px;
+    color: var(--color-text-muted); font-size: 0.75rem; letter-spacing: 1px;
+    font-weight: 300; border-top: 1px solid var(--color-border);
+}
+
+/* ================================
+   动画
+   ================================ */
+@keyframes cardIn {
+    from { opacity: 0; transform: translateY(30px) scale(0.96); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+@keyframes floatY {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-10px); }
+}
+
+/* ================================
+   响应式
+   ================================ */
+@media (max-width: 1024px) {
+    .gallery-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 720px) {
+    .gallery-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .header { padding: 55px 16px 50px; }
+    .site-title { font-size: 2.2rem; letter-spacing: 5px; }
+    .site-desc { font-size: 0.85rem; letter-spacing: 3px; }
+    .filter-btn { padding: 5px 14px; font-size: 0.78rem; margin: 3px 2px; }
+    .lb-prev { left: 6px; }
+    .lb-next { right: 6px; }
+    .lb-nav { font-size: 1rem; padding: 10px 7px; }
+    .lb-close { top: -38px; right: 0; font-size: 1.6rem; }
+}
+
+@media (max-width: 440px) {
+    .gallery-grid { grid-template-columns: 1fr; gap: 14px; }
+    .site-title { font-size: 1.8rem; }
+}
+</style>
 </head>
 <body>
 
-    <!-- ============================================
-    头部 — 毛玻璃暗色质感
-    ============================================ -->
-    <header class="header">
-        <div class="container">
-            <span class="header-icon">📸</span>
-            <h1 class="site-title"><strong>照片</strong>墙</h1>
-            <p class="site-desc">用光影定格美好瞬间</p>
-            <div class="header-divider"></div>
-        </div>
-    </header>
+<!-- ===== 鼠标跟随光晕 ===== -->
+<div id="cursorGlow"></div>
 
-    <!-- ============================================
-    筛选导航
-    ============================================ -->
-    <nav class="filters">
-        <div class="container">
-            <button class="filter-btn active" data-filter="all">全部</button>
-            <button class="filter-btn" data-filter="nature">🌿 自然</button>
-            <button class="filter-btn" data-filter="city">🏙️ 城市</button>
-            <button class="filter-btn" data-filter="people">👤 人物</button>
-            <button class="filter-btn" data-filter="animal">🐾 动物</button>
-        </div>
-    </nav>
+<!-- ===== 头部 ===== -->
+<header class="header" id="header">
+    <div class="header-bg"></div>
+    <div class="header-noise"></div>
+    <span class="header-icon">📸</span>
+    <h1 class="site-title"><strong>照片</strong>墙</h1>
+    <p class="site-desc">用光影定格美好瞬间</p>
+</header>
 
-    <!-- ============================================
-    瀑布流照片网格
-    ============================================ -->
-    <main class="gallery">
-        <div class="container">
-            <div class="gallery-grid" id="galleryGrid">
-                <!-- 由 JavaScript 动态渲染 -->
-            </div>
-        </div>
-    </main>
+<!-- ===== 筛选栏 ===== -->
+<nav class="filters" id="filters">
+    <button class="filter-btn active" data-filter="all">全部</button>
+    <button class="filter-btn" data-filter="nature">🌿 自然</button>
+    <button class="filter-btn" data-filter="city">🏙️ 城市</button>
+    <button class="filter-btn" data-filter="people">👤 人物</button>
+    <button class="filter-btn" data-filter="animal">🐾 动物</button>
+</nav>
 
-    <!-- ============================================
-    Lightbox 全屏查看器
-    ============================================ -->
-    <div class="lightbox" id="lightbox">
-        <div class="lightbox-inner">
-            <!-- 关闭按钮 -->
-            <button class="lb-close" id="lbClose" aria-label="关闭">&times;</button>
-            <!-- 上一张 -->
-            <button class="lb-nav lb-prev" id="lbPrev" aria-label="上一张">&#10094;</button>
-            <!-- 下一张 -->
-            <button class="lb-nav lb-next" id="lbNext" aria-label="下一张">&#10095;</button>
-            <!-- 图片 -->
-            <img src="" alt="" id="lbImage" />
-            <!-- 信息栏 -->
-            <div class="lightbox-info">
-                <span class="lb-title" id="lbTitle"></span>
-                <span class="lb-counter" id="lbCounter"></span>
-            </div>
-            <span class="lb-hint">←  →  键盘切换</span>
-        </div>
+<!-- ===== 照片网格 ===== -->
+<main class="gallery">
+    <div class="container" style="max-width:1320px;margin:0 auto;padding:0 18px;">
+        <div class="gallery-grid" id="galleryGrid"></div>
     </div>
+</main>
 
-    <!-- ============================================
-    页脚
-    ============================================ -->
-    <footer class="footer">
-        <span>Made with ❤️ &middot; Powered by GitHub Pages</span>
-    </footer>
+<!-- ===== Lightbox ===== -->
+<div class="lightbox" id="lightbox">
+    <div class="lightbox-inner">
+        <button class="lb-close" id="lbClose">&times;</button>
+        <button class="lb-nav lb-prev" id="lbPrev">&#10094;</button>
+        <button class="lb-nav lb-next" id="lbNext">&#10095;</button>
+        <img src="" alt="" id="lbImage" />
+        <div class="lightbox-info">
+            <span id="lbTitle"></span>
+            <span class="lb-counter" id="lbCounter"></span>
+        </div>
+        <span class="lb-hint">←  →  键盘切换</span>
+    </div>
+</div>
 
-    <!-- ============================================
-    JavaScript
-    ============================================ -->
-    <script>
-        // =============================================
-        //  1. 照片数据（本地图片）
-        // =============================================
-        // 🖼️ 把照片放在 images/ 文件夹，命名为 1.jpg、2.jpg ...
-        //    不同比例会随机分配不同骨架屏形状
-        var PHOTOS = [];
-        for (var i = 1; i <= 33; i++) {
-            PHOTOS.push({
-                id: i,
-                src: 'images/' + i + '.jpg',
-                title: '照片 ' + i,
-                tag: 'nature' // 默认标签，可自行修改
-            });
-        }
+<!-- ===== 页脚 ===== -->
+<footer class="footer"><span>Made with ❤️ &middot; Powered by GitHub Pages</span></footer>
 
-        // 标签 → 显示名称映射
-        var TAG_LABEL = {
-            nature: '🌿 自然',
-            city: '🏙️ 城市',
-            people: '👤 人物',
-            animal: '🐾 动物'
-        };
+<script>
+// =============================================
+//  1. 照片数据
+// =============================================
+var PHOTOS = [];
+for (var i = 1; i <= 33; i++) {
+    PHOTOS.push({ id: i, src: 'images/' + i + '.jpg', title: '照片 ' + i, tag: 'nature' });
+}
 
-        // 五种骨架屏形状，轮流分配给图片
-        var SKELETON_CLASSES = [
-            'skeleton-portrait',
-            'skeleton-landscape',
-            'skeleton-square',
-            'skeleton-wide',
-            'skeleton-tall'
-        ];
+var TAG_LABEL = {
+    nature: '🌿 自然', city: '🏙️ 城市',
+    people: '👤 人物', animal: '🐾 动物'
+};
 
-        // =============================================
-        //  2. DOM 引用
-        // =============================================
-        var grid = document.getElementById('galleryGrid');
-        var filterBtns = document.querySelectorAll('.filter-btn');
+var SKELETONS = ['skeleton-h', 'skeleton-v', 'skeleton-sq', 'skeleton-w'];
 
-        var lb = document.getElementById('lightbox');
-        var lbImg = document.getElementById('lbImage');
-        var lbTitle = document.getElementById('lbTitle');
-        var lbCounter = document.getElementById('lbCounter');
-        var lbClose = document.getElementById('lbClose');
-        var lbPrev = document.getElementById('lbPrev');
-        var lbNext = document.getElementById('lbNext');
+// =============================================
+//  2. DOM
+// =============================================
+var gridEl = document.getElementById('galleryGrid');
+var filterBtns = document.querySelectorAll('.filter-btn');
+var lb = document.getElementById('lightbox');
+var lbImg = document.getElementById('lbImage');
+var lbTitle = document.getElementById('lbTitle');
+var lbCounter = document.getElementById('lbCounter');
+var lbClose = document.getElementById('lbClose');
+var lbPrev = document.getElementById('lbPrev');
+var lbNext = document.getElementById('lbNext');
+var glow = document.getElementById('cursorGlow');
 
-        var currentFilter = 'all';
-        var currentIndex = 0;
-        var filteredPhotos = [];
+var currentFilter = 'all';
+var currentIndex = 0;
+var filtered = [];
 
-        // =============================================
-        //  3. 渲染照片墙（含骨架屏）
-        // =============================================
-        function renderPhotos(filter) {
-            filter = filter || 'all';
-            currentFilter = filter;
+// =============================================
+//  3. 渲染
+// =============================================
+function render(filter) {
+    filter = filter || 'all';
+    currentFilter = filter;
+    filtered = filter === 'all' ? PHOTOS.slice() : PHOTOS.filter(function(p) { return p.tag === filter; });
+    gridEl.innerHTML = '';
 
-            // 筛选照片
-            filteredPhotos = filter === 'all' ?
-                PHOTOS.slice() :
-                PHOTOS.filter(function(p) { return p.tag === filter; });
+    filtered.forEach(function(photo, idx) {
+        var item = document.createElement('div');
+        item.className = 'gallery-item';
+        item.style.animationDelay = (idx * 0.04) + 's';
 
-            grid.innerHTML = '';
+        var sk = SKELETONS[photo.id % SKELETONS.length];
+        var wrap = document.createElement('div');
+        wrap.className = 'img-wrapper';
 
-            filteredPhotos.forEach(function(photo, index) {
-                // 卡片容器
-                var item = document.createElement('div');
-                item.className = 'gallery-item';
-                item.style.animationDelay = (index * 0.04) + 's';
+        var skeleton = document.createElement('div');
+        skeleton.className = 'skeleton ' + sk;
 
-                // 骨架屏形状 — 根据 id 取模分配
-                var skClass = SKELETON_CLASSES[photo.id % SKELETON_CLASSES.length];
+        var img = document.createElement('img');
+        img.src = photo.src;
+        img.alt = photo.title;
+        img.loading = 'lazy';
+        img.style.opacity = '0';
 
-                // 图片容器（包裹骨架屏 + img）
-                var wrapper = document.createElement('div');
-                wrapper.className = 'img-wrapper';
-
-                // 骨架屏占位块
-                var skeleton = document.createElement('div');
-                skeleton.className = 'skeleton ' + skClass;
-
-                // 真实图片（先隐藏，加载完成后显示）
-                var img = document.createElement('img');
-                img.className = 'gallery-img';
-                img.src = photo.src;
-                img.alt = photo.title;
-                img.loading = 'lazy';
-                // 图片完全不可见，由骨架屏占位
-                img.style.opacity = '0';
-
-                // 图片加载完成 → 隐藏骨架屏 + 淡入图片
-                img.addEventListener('load', function() {
-                    wrapper.classList.add('loaded');
-                    img.style.opacity = '1';
-                    img.style.transition = 'opacity 0.4s ease';
-                });
-                // 加载失败也移除骨架屏，显示破损占位
-                img.addEventListener('error', function() {
-                    wrapper.classList.add('loaded');
-                    img.style.opacity = '0.3';
-                    img.style.objectFit = 'contain';
-                    img.style.padding = '40px';
-                });
-
-                wrapper.appendChild(skeleton);
-                wrapper.appendChild(img);
-
-                // 悬浮覆盖层
-                var overlay = document.createElement('div');
-                overlay.className = 'overlay';
-                overlay.innerHTML =
-                    '<span class="view-hint">👁 查看大图</span>' +
-                    '<div class="photo-title">' + escapeHtml(photo.title) + '</div>' +
-                    '<span class="photo-tag">' + (TAG_LABEL[photo.tag] || photo.tag) + '</span>';
-
-                item.appendChild(wrapper);
-                item.appendChild(overlay);
-
-                // 点击打开 Lightbox
-                item.addEventListener('click', function() {
-                    openLightbox(index);
-                });
-
-                grid.appendChild(item);
-            });
-        }
-
-        // 简单防 XSS 转义
-        function escapeHtml(str) {
-            var div = document.createElement('div');
-            div.appendChild(document.createTextNode(str));
-            return div.innerHTML;
-        }
-
-        // =============================================
-        //  4. Lightbox 全屏查看器
-        // =============================================
-        function openLightbox(index) {
-            currentIndex = index;
-            var photo = filteredPhotos[index];
-            if (!photo) return;
-
-            lbImg.src = photo.src;
-            lbImg.alt = photo.title;
-            lbTitle.textContent = photo.title + ' · ' + (TAG_LABEL[photo.tag] || photo.tag);
-            lbCounter.textContent = (index + 1) + ' / ' + filteredPhotos.length;
-            lb.classList.add('open');
-            document.body.style.overflow = 'hidden';
-        }
-
-        function closeLightbox() {
-            lb.classList.remove('open');
-            document.body.style.overflow = '';
-        }
-
-        function prevPhoto() {
-            if (filteredPhotos.length === 0) return;
-            currentIndex = (currentIndex - 1 + filteredPhotos.length) % filteredPhotos.length;
-            var photo = filteredPhotos[currentIndex];
-            lbImg.src = photo.src;
-            lbImg.alt = photo.title;
-            lbTitle.textContent = photo.title + ' · ' + (TAG_LABEL[photo.tag] || photo.tag);
-            lbCounter.textContent = (currentIndex + 1) + ' / ' + filteredPhotos.length;
-        }
-
-        function nextPhoto() {
-            if (filteredPhotos.length === 0) return;
-            currentIndex = (currentIndex + 1) % filteredPhotos.length;
-            var photo = filteredPhotos[currentIndex];
-            lbImg.src = photo.src;
-            lbImg.alt = photo.title;
-            lbTitle.textContent = photo.title + ' · ' + (TAG_LABEL[photo.tag] || photo.tag);
-            lbCounter.textContent = (currentIndex + 1) + ' / ' + filteredPhotos.length;
-        }
-
-        // =============================================
-        //  5. 事件绑定
-        // =============================================
-
-        // 筛选按钮
-        filterBtns.forEach(function(btn) {
-            btn.addEventListener('click', function() {
-                filterBtns.forEach(function(b) { b.classList.remove('active'); });
-                btn.classList.add('active');
-                renderPhotos(btn.getAttribute('data-filter'));
-            });
+        img.addEventListener('load', function() {
+            wrap.classList.add('loaded');
+            img.style.opacity = '1';
+            img.style.transition = 'opacity 0.5s ease';
+        });
+        img.addEventListener('error', function() {
+            wrap.classList.add('loaded');
+            img.style.opacity = '0.3';
         });
 
-        // Lightbox 关闭
-        lbClose.addEventListener('click', closeLightbox);
+        wrap.appendChild(skeleton);
+        wrap.appendChild(img);
 
-        // 点击遮罩背景关闭
-        lb.addEventListener('click', function(e) {
-            if (e.target === lb) closeLightbox();
+        // 光泽层（鼠标追踪用）
+        var gloss = document.createElement('div');
+        gloss.className = 'gloss';
+
+        var overlay = document.createElement('div');
+        overlay.className = 'overlay';
+        overlay.innerHTML =
+            '<span class="view-hint">👁 查看大图</span>' +
+            '<div class="photo-title">' + esc(photo.title) + '</div>' +
+            '<span class="photo-tag">' + (TAG_LABEL[photo.tag] || photo.tag) + '</span>';
+
+        item.appendChild(wrap);
+        item.appendChild(gloss);
+        item.appendChild(overlay);
+
+        item.addEventListener('click', function() { openLB(idx); });
+
+        gridEl.appendChild(item);
+    });
+}
+
+function esc(s) { var d = document.createElement('div'); d.appendChild(document.createTextNode(s)); return d.innerHTML; }
+
+// =============================================
+//  4. Lightbox
+// =============================================
+function openLB(idx) {
+    currentIndex = idx;
+    var p = filtered[idx]; if (!p) return;
+    lbImg.src = p.src; lbImg.alt = p.title;
+    lbTitle.textContent = p.title + ' · ' + (TAG_LABEL[p.tag] || p.tag);
+    lbCounter.textContent = (idx + 1) + ' / ' + filtered.length;
+    lb.classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeLB() { lb.classList.remove('open'); document.body.style.overflow = ''; }
+function prevP() { if (!filtered.length) return; currentIndex = (currentIndex - 1 + filtered.length) % filtered.length; syncLB(); }
+function nextP() { if (!filtered.length) return; currentIndex = (currentIndex + 1) % filtered.length; syncLB(); }
+function syncLB() { var p = filtered[currentIndex]; if (p) { lbImg.src = p.src; lbImg.alt = p.title; lbTitle.textContent = p.title + ' · ' + (TAG_LABEL[p.tag] || p.tag); lbCounter.textContent = (currentIndex + 1) + ' / ' + filtered.length; } }
+
+// =============================================
+//  5. 鼠标交互 — 3D 倾角 + 光泽跟随
+// =============================================
+// —— 全局光晕跟随鼠标 ——
+document.addEventListener('mousemove', function(e) {
+    var x = e.clientX, y = e.clientY;
+    glow.style.transform = 'translate(' + x + 'px, ' + y + 'px)';
+    // 光晕随鼠标缓动（因为是 fixed 定位，直接 translate 即可）
+});
+
+// —— 卡片 3D 倾角 + 光泽 ——
+function initTilt() {
+    var cards = document.querySelectorAll('.gallery-item');
+    cards.forEach(function(card) {
+        // 获取光泽层
+        var gloss = card.querySelector('.gloss');
+        if (!gloss) return;
+
+        card.addEventListener('mousemove', function(e) {
+            var rect = card.getBoundingClientRect();
+            // 鼠标相对于卡片的位置（0~1）
+            var x = (e.clientX - rect.left) / rect.width;
+            var y = (e.clientY - rect.top) / rect.height;
+            // 倾角范围 ±8°
+            var tiltX = (y - 0.5) * -16;
+            var tiltY = (x - 0.5) * 16;
+            // 应用 3D 变换
+            card.style.transform =
+                'perspective(800px) rotateX(' + tiltX + 'deg) rotateY(' + tiltY + 'deg) scale3d(1.02,1.02,1.02)';
+            // 光泽层: 径向渐变跟随鼠标
+            gloss.style.background =
+                'radial-gradient(circle at ' + (x * 100) + '% ' + (y * 100) + '%, rgba(255,255,255,0.2) 0%, transparent 60%)';
         });
 
-        // 导航按钮
-        lbPrev.addEventListener('click', function(e) {
-            e.stopPropagation();
-            prevPhoto();
+        card.addEventListener('mouseleave', function() {
+            card.style.transform = 'perspective(800px) rotateX(0deg) rotateY(0deg) scale3d(1,1,1)';
+            // 用 transition 让卡片平滑复位
+            card.style.transition = 'transform 0.5s cubic-bezier(0.22,1,0.36,1)';
+            setTimeout(function() { card.style.transition = ''; }, 500);
+            if (gloss) gloss.style.background = '';
         });
-        lbNext.addEventListener('click', function(e) {
-            e.stopPropagation();
-            nextPhoto();
-        });
+    });
+}
 
-        // 键盘快捷键
-        document.addEventListener('keydown', function(e) {
-            if (!lb.classList.contains('open')) return;
-            if (e.key === 'Escape') { closeLightbox(); return; }
-            if (e.key === 'ArrowLeft') { e.preventDefault();
-                prevPhoto(); return; }
-            if (e.key === 'ArrowRight') { e.preventDefault();
-                nextPhoto(); return; }
-        });
+// —— 头部视差 ——
+var header = document.getElementById('header');
+var headerBg = header.querySelector('.header-bg');
+document.addEventListener('mousemove', function(e) {
+    var x = (e.clientX / window.innerWidth - 0.5) * 2;
+    var y = (e.clientY / window.innerHeight - 0.5) * 2;
+    headerBg.style.transform = 'translate(' + (x * -10) + 'px, ' + (y * -10) + 'px)';
+});
 
-        // =============================================
-        //  6. 启动
-        // =============================================
-        renderPhotos('all');
-    </script>
+// —— 筛选按钮磁性效果 ——
+filterBtns.forEach(function(btn) {
+    btn.addEventListener('mousemove', function(e) {
+        var rect = btn.getBoundingClientRect();
+        var x = e.clientX - rect.left - rect.width / 2;
+        var y = e.clientY - rect.top - rect.height / 2;
+        var dist = Math.sqrt(x * x + y * y);
+        var maxDist = Math.max(rect.width, rect.height);
+        var pull = Math.min(1, dist / maxDist);
+        var dx = x * 0.15 * (1 - pull);
+        var dy = y * 0.15 * (1 - pull);
+        btn.style.transform = 'translate(' + dx + 'px, ' + dy + 'px)';
+    });
+    btn.addEventListener('mouseleave', function() {
+        btn.style.transform = '';
+    });
+});
+
+// =============================================
+//  6. 事件绑定
+// =============================================
+filterBtns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        filterBtns.forEach(function(b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        render(btn.getAttribute('data-filter'));
+        // 重新绑定 3D 倾角（因为 DOM 重建了）
+        initTilt();
+    });
+});
+
+lbClose.addEventListener('click', closeLB);
+lb.addEventListener('click', function(e) { if (e.target === lb) closeLB(); });
+lbPrev.addEventListener('click', function(e) { e.stopPropagation(); prevP(); });
+lbNext.addEventListener('click', function(e) { e.stopPropagation(); nextP(); });
+
+document.addEventListener('keydown', function(e) {
+    if (!lb.classList.contains('open')) return;
+    if (e.key === 'Escape') { closeLB(); return; }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); prevP(); return; }
+    if (e.key === 'ArrowRight') { e.preventDefault(); nextP(); return; }
+});
+
+// =============================================
+//  7. 启动
+// =============================================
+render('all');
+// 等 DOM 渲染完成后再绑定倾角
+requestAnimationFrame(function() { initTilt(); });
+</script>
 
 </body>
 </html>
