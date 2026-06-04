@@ -7,189 +7,180 @@
 <style>
 :root {
     --bg: #12121a;
-    --surface: #1c1c26;
     --accent: #6d6dff;
     --text: rgba(255,255,255,0.85);
-    --text-light: rgba(255,255,255,0.5);
+    --text-light: rgba(255,255,255,0.45);
     --radius: 10px;
-    --gap: 12px;
+    --gap: 16px;
     --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif;
 }
-* { margin: 0; padding: 0; box-sizing: border-box; }
-html { -webkit-font-smoothing: antialiased; }
+* { margin:0; padding:0; box-sizing:border-box; }
+html { -webkit-font-smoothing:antialiased; }
 body {
-    font-family: var(--font);
-    background: var(--bg);
-    color: var(--text);
-    height: 100vh; overflow: hidden;
-    user-select: none; -webkit-user-select: none;
+    font-family:var(--font); background:var(--bg); color:var(--text);
+    height:100vh; overflow:hidden;
+    user-select:none; -webkit-user-select:none;
 }
-img { display: block; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+img { display:block; width:100%; height:100%; object-fit:cover; pointer-events:none; }
 
 /* ===== 头部 ===== */
-.header {
-    padding: 24px 32px 10px;
-    display: flex; align-items: center; justify-content: space-between;
-}
-.header-left { display: flex; align-items: center; gap: 12px; }
-.header-icon { font-size: 1.4rem; }
-.site-title { font-size: 1.2rem; font-weight: 300; letter-spacing: 3px; color: var(--text); }
-.site-title strong { font-weight: 600; letter-spacing: 1px; }
-.page-num { font-size: 0.75rem; color: var(--text-light); font-weight: 300; letter-spacing: 1px; }
+.header { padding:24px 36px 8px; display:flex; align-items:center; justify-content:space-between; }
+.header-left { display:flex; align-items:center; gap:10px; }
+.header-icon { font-size:1.3rem; }
+.site-title { font-size:1.15rem; font-weight:300; letter-spacing:3px; }
+.site-title strong { font-weight:600; letter-spacing:1px; }
+.page-num { font-size:0.75rem; color:var(--text-light); letter-spacing:1px; font-weight:300; }
 
-/* ===== 筛选栏 ===== */
-.filters { padding: 0 32px 12px; display: flex; gap: 8px; }
+/* ===== 筛选 ===== */
+.filters { padding:0 36px 14px; display:flex; gap:8px; }
 .filter-btn {
-    border: 1px solid rgba(255,255,255,0.1);
-    background: rgba(255,255,255,0.04);
-    color: var(--text-light);
-    padding: 4px 16px; border-radius: 9999px;
-    font-size: 0.75rem; font-weight: 400; font-family: var(--font);
-    cursor: pointer; letter-spacing: 0.3px;
-    transition: background 0.3s, color 0.3s, border-color 0.3s, box-shadow 0.3s;
-    backdrop-filter: blur(8px);
+    border:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.03);
+    color:var(--text-light); padding:4px 16px; border-radius:9999px;
+    font-size:0.75rem; font-weight:400; font-family:var(--font);
+    cursor:pointer; letter-spacing:0.3px;
+    transition:all 0.3s; backdrop-filter:blur(8px);
 }
-.filter-btn:hover { border-color: rgba(255,255,255,0.2); color: var(--text); }
-.filter-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: 0 4px 20px rgba(109,109,255,0.3); }
+.filter-btn:hover { border-color:rgba(255,255,255,0.2); color:var(--text); }
+.filter-btn.active { background:var(--accent); color:#fff; border-color:var(--accent); box-shadow:0 4px 20px rgba(109,109,255,0.3); }
 
-/* ===== 主舞台 ===== */
-.viewport-mask {
-    position: relative; z-index: 5;
-    height: calc(100vh - 115px);
-    overflow: hidden;
-    perspective: 1000px;
-    perspective-origin: 50% 40%;
+/* ===== 舞台 ===== */
+.stage-wrap {
+    position:relative; z-index:5;
+    height:calc(100vh - 115px);
+    overflow:hidden;
+    perspective:1000px; perspective-origin:50% 40%;
 }
-.stage { transform-style: preserve-3d; will-change: transform; height: 100%; width: 100%; }
+.stage { transform-style:preserve-3d; will-change:transform; height:100%; width:100%; }
 
-/* ===== 横向滚动容器（带 snap） ===== */
-.scroll-viewport {
-    width: 100%; height: 100%;
-    overflow: hidden;
-    cursor: grab;
-    position: relative;
+/* ===== 横向滚动容器 ===== */
+.scroll-x {
+    width:100%; height:100%;
+    overflow:hidden;
+    cursor:grab;
+    position:relative;
 }
-.scroll-viewport:active { cursor: grabbing; }
+.scroll-x:active { cursor:grabbing; }
 
-.scroll-content {
-    display: flex;
-    height: 100%;
-    will-change: transform;
-    transform-style: preserve-3d;
-    /* 由 JS 控制 translateX */
+.scroll-track {
+    display:flex;
+    height:100%;
+    will-change:transform;
+    transform-style:preserve-3d;
+    transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* ===== 每一页 ===== */
-.photo-page {
-    flex: 0 0 100%;
-    height: 100%;
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: var(--gap);
-    padding: 6px 32px 6px 32px;
-    transform-style: preserve-3d;
+.page {
+    flex:0 0 100%;
+    height:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:10px 40px;
 }
 
-/* 照片卡片 */
+/* 页内照片网格 — 不塞满，有呼吸感 */
+.page-grid {
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+    gap:var(--gap);
+    width:100%;
+    max-width:900px;
+    margin:0 auto;
+}
+
+/* ===== 照片卡片 ===== */
 .photo-card {
-    position: relative;
-    border-radius: var(--radius);
-    overflow: hidden;
-    cursor: pointer;
-    background: var(--surface);
-    transform-style: preserve-3d;
-    will-change: transform;
-    transition: box-shadow 0.4s cubic-bezier(0.22,1,0.36,1);
-    backface-visibility: hidden;
+    position:relative;
+    border-radius:var(--radius);
+    overflow:hidden;
+    cursor:pointer;
+    background:rgba(255,255,255,0.04);
+    transform-style:preserve-3d;
+    will-change:transform;
+    transition:box-shadow 0.4s cubic-bezier(0.22,1,0.36,1);
+    backface-visibility:hidden;
+    aspect-ratio:1;
 }
-.photo-card .img-wrap { width: 100%; height: 100%; overflow: hidden; border-radius: inherit; }
-.photo-card img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s cubic-bezier(0.22,1,0.36,1); }
-.photo-card:hover img { transform: scale(1.08); }
+.photo-card.wide { grid-column:span 2; grid-row:span 1; }
+.photo-card.tall { grid-column:span 1; grid-row:span 2; }
+.photo-card.big { grid-column:span 2; grid-row:span 2; }
 
-/* 覆盖层 */
+.photo-card .img-wrap { width:100%; height:100%; overflow:hidden; border-radius:inherit; }
+.photo-card img { width:100%; height:100%; object-fit:cover; transition:transform 0.6s cubic-bezier(0.22,1,0.36,1); }
+.photo-card:hover img { transform:scale(1.08); }
+
 .photo-card .overlay {
-    position: absolute; inset: 0; z-index: 2;
-    background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.05) 45%, transparent 60%);
-    display: flex; flex-direction: column; justify-content: flex-end;
-    padding: 20px 12px 10px;
-    opacity: 0; transition: opacity 0.4s cubic-bezier(0.22,1,0.36,1);
-    pointer-events: none;
+    position:absolute; inset:0; z-index:2;
+    background:linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.05) 45%, transparent 60%);
+    display:flex; flex-direction:column; justify-content:flex-end;
+    padding:16px 10px 8px;
+    opacity:0; transition:opacity 0.35s ease;
+    pointer-events:none;
 }
-.photo-card:hover .overlay { opacity: 1; }
-.overlay .photo-title { color: #fff; font-size: 0.75rem; font-weight: 500; letter-spacing: 0.3px; transform: translateY(10px); transition: transform 0.4s cubic-bezier(0.22,1,0.36,1); }
-.photo-card:hover .overlay .photo-title { transform: translateY(0); }
-.overlay .photo-tag { display: inline-block; font-size: 0.55rem; color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.1); backdrop-filter: blur(4px); padding: 2px 8px; border-radius: 9999px; margin-top: 3px; width: fit-content; transform: translateY(10px); transition: transform 0.4s cubic-bezier(0.22,1,0.36,1) 0.03s; }
-.photo-card:hover .overlay .photo-tag { transform: translateY(0); }
-
-/* 骨架屏 */
-.skeleton {
-    background: rgba(255,255,255,0.04);
-    border-radius: var(--radius);
-    animation: shimmer 1.8s ease-in-out infinite;
-    background-image: linear-gradient(90deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 100%);
-    background-size: 200% 100%;
-}
-@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+.photo-card:hover .overlay { opacity:1; }
+.overlay .photo-title { color:#fff; font-size:0.7rem; font-weight:500; }
+.overlay .photo-tag { display:inline-block; font-size:0.55rem; color:rgba(255,255,255,0.5); background:rgba(255,255,255,0.1); border-radius:9999px; padding:1px 8px; margin-top:3px; width:fit-content; }
 
 /* ===== 底部页码 ===== */
 .page-bar {
-    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-    display: flex; align-items: center; gap: 12px;
-    background: rgba(255,255,255,0.06);
-    backdrop-filter: blur(16px);
-    padding: 8px 18px;
-    border-radius: 9999px;
-    border: 1px solid rgba(255,255,255,0.06);
-    z-index: 20;
-    pointer-events: none;
+    position:fixed; bottom:22px; left:50%; transform:translateX(-50%);
+    display:flex; align-items:center; gap:10px;
+    background:rgba(255,255,255,0.05); backdrop-filter:blur(16px);
+    padding:6px 16px; border-radius:9999px;
+    border:1px solid rgba(255,255,255,0.05);
+    z-index:20;
 }
-.page-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.15); transition: background 0.3s, transform 0.3s; }
-.page-dot.active { background: var(--accent); transform: scale(1.4); box-shadow: 0 0 12px rgba(109,109,255,0.4); }
-.page-label { font-size: 0.7rem; color: var(--text-light); letter-spacing: 0.5px; }
+.page-dot { width:5px; height:5px; border-radius:50%; background:rgba(255,255,255,0.12); transition:all 0.3s; }
+.page-dot.active { background:var(--accent); transform:scale(1.5); box-shadow:0 0 10px rgba(109,109,255,0.4); }
 
 /* ===== Lightbox ===== */
-.lightbox { position: fixed; inset: 0; z-index: 999; background: rgba(0,0,0,0.85); backdrop-filter: blur(30px); display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.4s ease; }
-.lightbox.open { opacity: 1; pointer-events: auto; }
-.lightbox-inner { position: relative; max-width: 90vw; max-height: 90vh; display: flex; flex-direction: column; align-items: center; transform: scale(0.92); transition: transform 0.4s cubic-bezier(0.22,1,0.36,1); }
-.lightbox.open .lightbox-inner { transform: scale(1); }
-.lightbox-inner img { max-width: 100%; max-height: 80vh; border-radius: var(--radius); box-shadow: 0 25px 80px rgba(0,0,0,0.6); object-fit: contain; }
-.lightbox-info { display: flex; justify-content: space-between; width: 100%; padding: 14px 4px 0; color: rgba(255,255,255,0.6); font-size: 0.8rem; }
-.lb-close { position: absolute; top: -44px; right: -4px; color: rgba(255,255,255,0.4); font-size: 2rem; cursor: pointer; background: none; border: none; font-family: var(--font); transition: color 0.25s, transform 0.25s; }
-.lb-close:hover { color: #fff; transform: rotate(90deg); }
-.lb-nav { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); color: rgba(255,255,255,0.4); font-size: 1.2rem; padding: 12px 8px; cursor: pointer; border-radius: 6px; transition: background 0.25s, color 0.25s; font-family: var(--font); }
-.lb-nav:hover { background: rgba(255,255,255,0.1); color: #fff; }
-.lb-prev { left: -50px; } .lb-next { right: -50px; }
-.lb-hint { position: absolute; bottom: -32px; color: rgba(255,255,255,0.1); font-size: 0.6rem; }
+.lightbox { position:fixed; inset:0; z-index:999; background:rgba(0,0,0,0.85); backdrop-filter:blur(30px); display:flex; justify-content:center; align-items:center; opacity:0; pointer-events:none; transition:opacity 0.4s; }
+.lightbox.open { opacity:1; pointer-events:auto; }
+.lightbox-inner { position:relative; max-width:88vw; max-height:88vh; display:flex; flex-direction:column; align-items:center; transform:scale(0.92); transition:transform 0.4s cubic-bezier(0.22,1,0.36,1); }
+.lightbox.open .lightbox-inner { transform:scale(1); }
+.lightbox-inner img { max-width:100%; max-height:78vh; border-radius:var(--radius); box-shadow:0 25px 80px rgba(0,0,0,0.6); object-fit:contain; }
+.lightbox-info { display:flex; justify-content:space-between; width:100%; padding:12px 4px 0; color:rgba(255,255,255,0.5); font-size:0.75rem; }
+.lb-close { position:absolute; top:-42px; right:-4px; color:rgba(255,255,255,0.35); font-size:1.8rem; cursor:pointer; background:none; border:none; font-family:var(--font); transition:all 0.25s; }
+.lb-close:hover { color:#fff; transform:rotate(90deg); }
+.lb-nav { position:absolute; top:50%; transform:translateY(-50%); background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); color:rgba(255,255,255,0.35); font-size:1.1rem; padding:10px 7px; cursor:pointer; border-radius:6px; transition:all 0.25s; font-family:var(--font); }
+.lb-nav:hover { background:rgba(255,255,255,0.08); color:#fff; }
+.lb-prev { left:-44px; } .lb-next { right:-44px; }
 
 /* ===== 响应式 ===== */
-@media (max-width: 1024px) { .photo-page { grid-template-columns: repeat(3, 1fr); } }
-@media (max-width: 720px) {
-    .photo-page { grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 6px 18px; }
-    .header { padding: 20px 18px 8px; }
-    .site-title { font-size: 1rem; }
-    .filters { padding: 0 18px 10px; gap: 6px; }
-    .filter-btn { padding: 3px 12px; font-size: 0.7rem; }
-    .viewport-mask { height: calc(100vh - 100px); }
-    .page-bar { bottom: 16px; padding: 6px 14px; gap: 8px; }
-    .lb-nav { font-size: 0.9rem; padding: 8px 6px; }
-    .lb-prev { left: 4px; } .lb-next { right: 4px; }
-    .lb-close { top: -36px; font-size: 1.5rem; }
+@media (max-width:1024px) {
+    .page-grid { grid-template-columns:repeat(3,1fr); max-width:700px; }
 }
-@media (max-width: 440px) { .photo-page { grid-template-columns: repeat(2, 1fr); gap: 8px; } }
+@media (max-width:720px) {
+    .page-grid { grid-template-columns:repeat(2,1fr); gap:12px; max-width:500px; }
+    .header { padding:18px 20px 6px; }
+    .site-title { font-size:1rem; }
+    .filters { padding:0 20px 10px; gap:5px; }
+    .filter-btn { padding:3px 12px; font-size:0.7rem; }
+    .stage-wrap { height:calc(100vh - 90px); }
+    .page { padding:8px 20px; }
+    .page-bar { bottom:14px; padding:5px 12px; gap:8px; }
+    .lb-nav { font-size:0.9rem; padding:7px 5px; }
+    .lb-prev { left:4px; } .lb-next { right:4px; }
+    .lb-close { top:-34px; font-size:1.4rem; }
+    .page-num { font-size:0.7rem; }
+}
+
+/* ===== 骨架屏 ===== */
+.skeleton { background:rgba(255,255,255,0.04); border-radius:var(--radius); animation:shimmer 1.8s ease-in-out infinite; background-image:linear-gradient(90deg,rgba(255,255,255,0.04) 0%,rgba(255,255,255,0.08) 50%,rgba(255,255,255,0.04) 100%); background-size:200% 100%; }
+@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
 </style>
 </head>
 <body>
 
-<!-- ===== 头部 ===== -->
 <header class="header">
     <div class="header-left">
         <span class="header-icon">📸</span>
         <h1 class="site-title"><strong>照片</strong>墙</h1>
     </div>
-    <span class="page-num" id="pageNumLabel">1 / 5</span>
+    <span class="page-num" id="pageNum">1 / 5</span>
 </header>
 
-<!-- ===== 筛选栏 ===== -->
 <nav class="filters" id="filters">
     <button class="filter-btn active" data-filter="all">全部</button>
     <button class="filter-btn" data-filter="nature">🌿 自然</button>
@@ -198,414 +189,313 @@ img { display: block; width: 100%; height: 100%; object-fit: cover; pointer-even
     <button class="filter-btn" data-filter="animal">🐾 动物</button>
 </nav>
 
-<!-- ===== 主舞台 ===== -->
-<div class="viewport-mask" id="viewportMask">
+<div class="stage-wrap" id="stageWrap">
     <div class="stage" id="stage">
-        <div class="scroll-viewport" id="scrollViewport">
-            <div class="scroll-content" id="scrollContent"></div>
+        <div class="scroll-x" id="scrollX">
+            <div class="scroll-track" id="scrollTrack"></div>
         </div>
     </div>
 </div>
 
-<!-- ===== 底部页码指示器 ===== -->
-<div class="page-bar" id="pageBar">
-    <div class="page-dots" id="pageDots"></div>
-</div>
+<div class="page-bar" id="pageBar"><div class="page-dots" id="pageDots"></div></div>
 
-<!-- ===== Lightbox ===== -->
 <div class="lightbox" id="lightbox">
     <div class="lightbox-inner">
         <button class="lb-close" id="lbClose">&times;</button>
         <button class="lb-nav lb-prev" id="lbPrev">&#10094;</button>
         <button class="lb-nav lb-next" id="lbNext">&#10095;</button>
         <img src="" alt="" id="lbImage" />
-        <div class="lightbox-info">
-            <span id="lbTitle"></span>
-            <span class="lb-counter" id="lbCounter"></span>
-        </div>
-        <span class="lb-hint">←  → 键切换 · Esc 关闭</span>
+        <div class="lightbox-info"><span id="lbTitle"></span><span id="lbCounter"></span></div>
     </div>
 </div>
 
 <script>
 // =============================================
-//  1. 照片数据
+//  1. 数据
 // =============================================
 var PHOTOS = [];
-for (var i = 1; i <= 33; i++) {
-    PHOTOS.push({ id: i, src: 'images/' + i + '.jpg', title: '照片 ' + i, tag: 'nature' });
-}
-var TAG_LABEL = { nature: '🌿 自然', city: '🏙️ 城市', people: '👤 人物', animal: '🐾 动物' };
+for (var i = 1; i <= 33; i++) PHOTOS.push({ id:i, src:'images/'+i+'.jpg', title:'照片 '+i, tag:'nature' });
+var TAG = { nature:'🌿 自然', city:'🏙️ 城市', people:'👤 人物', animal:'🐾 动物' };
+var PER = 8;
+
+// 每张照片的占位大小（用于网格错落）
+var SIZES = [1,1,1,1, 1,1,1,1, 1,1,1,2, 2,1,1,1, 1,1,1,1, 2,1,1,1, 1,2,1,1, 1,1,1,1, 1];
+// 一些卡片占2列宽
 
 // =============================================
 //  2. DOM
 // =============================================
-var content = document.getElementById('scrollContent');
-var viewport = document.getElementById('scrollViewport');
-var mask = document.getElementById('viewportMask');
+var track = document.getElementById('scrollTrack');
+var sx = document.getElementById('scrollX');
 var stage = document.getElementById('stage');
-var filterBtns = document.querySelectorAll('.filter-btn');
-var pageDots = document.getElementById('pageDots');
-var pageNumLabel = document.getElementById('pageNumLabel');
+var stageWrap = document.getElementById('stageWrap');
+var fBtns = document.querySelectorAll('.filter-btn');
+var pDots = document.getElementById('pageDots');
+var pNum = document.getElementById('pageNum');
 var lb = document.getElementById('lightbox');
 var lbImg = document.getElementById('lbImage');
-var lbTitle = document.getElementById('lbTitle');
-var lbCounter = document.getElementById('lbCounter');
-var lbClose = document.getElementById('lbClose');
-var lbPrev = document.getElementById('lbPrev');
-var lbNext = document.getElementById('lbNext');
+var lbT = document.getElementById('lbTitle');
+var lbC = document.getElementById('lbCounter');
+lbClose = document.getElementById('lbClose');
+lbPrev = document.getElementById('lbPrev');
+lbNext = document.getElementById('lbNext');
 
-var currentFilter = 'all';
-var currentLBIndex = 0;
-var PER_PAGE = 8;
+var curFilter = 'all', curIdx = 0, curPage = 0, totalP = 1, allPh = [];
 
 // =============================================
-//  3. 渲染：分页 + 每页照片网格
+//  3. 渲染
 // =============================================
 function render(filter) {
-    filter = filter || 'all';
-    currentFilter = filter;
+    filter = filter || 'all'; curFilter = filter;
     var photos = filter === 'all' ? PHOTOS.slice() : PHOTOS.filter(function(p) { return p.tag === filter; });
-    content.innerHTML = '';
+    allPh = photos;
+    track.innerHTML = '';
+    totalP = Math.max(1, Math.ceil(photos.length / PER));
 
-    var totalPages = Math.max(1, Math.ceil(photos.length / PER_PAGE));
-
-    for (var p = 0; p < totalPages; p++) {
+    for (var p = 0; p < totalP; p++) {
         var page = document.createElement('div');
-        page.className = 'photo-page';
+        page.className = 'page';
 
-        var start = p * PER_PAGE;
-        var end = Math.min(start + PER_PAGE, photos.length);
+        var grid = document.createElement('div');
+        grid.className = 'page-grid';
 
-        for (var idx = start; idx < end; idx++) {
-            var photo = photos[idx];
+        var start = p * PER;
+        var end = Math.min(start + PER, photos.length);
+
+        for (var i = start; i < end; i++) {
+            var photo = photos[i];
             var card = document.createElement('div');
-            card.className = 'photo-card';
+            // 用 SIZES 让部分卡片宽/高占比不同
+            var sz = SIZES[i] || 1;
+            var cls = 'photo-card';
+            if (sz === 2) cls += ' wide';
+            card.className = cls;
 
             var wrap = document.createElement('div');
             wrap.className = 'img-wrap';
-
             var img = document.createElement('img');
-            img.src = photo.src;
-            img.alt = photo.title;
-            img.loading = 'lazy';
-            img.draggable = false;
-
+            img.src = photo.src; img.alt = photo.title; img.loading = 'lazy'; img.draggable = false;
             wrap.appendChild(img);
             card.appendChild(wrap);
 
-            var overlay = document.createElement('div');
-            overlay.className = 'overlay';
-            overlay.innerHTML =
-                '<div class="photo-title">' + esc(photo.title) + '</div>' +
-                '<span class="photo-tag">' + (TAG_LABEL[photo.tag] || photo.tag) + '</span>';
-            card.appendChild(overlay);
+            var ov = document.createElement('div');
+            ov.className = 'overlay';
+            ov.innerHTML = '<div class="photo-title">'+esc(photo.title)+'</div><span class="photo-tag">'+(TAG[photo.tag]||photo.tag)+'</span>';
+            card.appendChild(ov);
 
-            // lightbox
-            card.addEventListener('click', (function(gi) { return function() { openLB(gi, photos); }; })(idx));
+            card.addEventListener('click', (function(gi) { return function() { openLB(gi); }; })(i));
 
-            // hover 暗化
-            page.appendChild(card);
+            grid.appendChild(card);
         }
 
-        content.appendChild(page);
+        page.appendChild(grid);
+        track.appendChild(page);
     }
 
-    // 绑定 hover
+    // 绑定悬停
     bindHover();
-
-    // 页码指示
-    updatePageDots(totalPages);
-    pageNumLabel.textContent = '1 / ' + totalPages;
-    currentPage = 0;
-
-    // 复位滚动
-    tx = 0;
-    content.style.transform = 'translateX(0px) translateZ(0)';
-    pageWidth = viewport.clientWidth;
-    updateMaxScroll();
+    // 页码
+    updateDots();
+    // 复位
+    curPage = 0;
+    goToPage(0, false);
 }
 
 function esc(s) { var d = document.createElement('div'); d.appendChild(document.createTextNode(s)); return d.innerHTML; }
 
-// =============================================
-//  4. 悬停聚焦：浮起 + 暗化其他
-// =============================================
 function bindHover() {
-    var cards = content.querySelectorAll('.photo-card');
-    cards.forEach(function(card) {
-        card.addEventListener('mouseenter', function() {
-            cards.forEach(function(c) { if (c !== card) c.style.filter = 'brightness(0.4) saturate(0.5)'; });
-            card.style.zIndex = '10';
-            card.style.transform = 'scale(1.05)';
-            card.style.boxShadow = '0 20px 60px rgba(0,0,0,0.5)';
+    var cs = track.querySelectorAll('.photo-card');
+    cs.forEach(function(c) {
+        c.addEventListener('mouseenter', function() {
+            cs.forEach(function(x) { if (x !== c) x.style.filter = 'brightness(0.35) saturate(0.5)'; });
+            c.style.zIndex = '10'; c.style.transform = 'scale(1.04)'; c.style.boxShadow = '0 20px 60px rgba(0,0,0,0.5)';
         });
-        card.addEventListener('mouseleave', function() {
-            cards.forEach(function(c) { c.style.filter = ''; });
-            card.style.zIndex = '';
-            card.style.transform = '';
-            card.style.boxShadow = '';
+        c.addEventListener('mouseleave', function() {
+            cs.forEach(function(x) { x.style.filter = ''; });
+            c.style.zIndex = ''; c.style.transform = ''; c.style.boxShadow = '';
         });
     });
 }
 
-// =============================================
-//  5. 页码指示器
-// =============================================
-function updatePageDots(total) {
-    pageDots.innerHTML = '';
-    for (var i = 0; i < total; i++) {
-        var dot = document.createElement('span');
-        dot.className = 'page-dot' + (i === 0 ? ' active' : '');
-        pageDots.appendChild(dot);
+function updateDots() {
+    pDots.innerHTML = '';
+    for (var i = 0; i < totalP; i++) {
+        var d = document.createElement('span');
+        d.className = 'page-dot' + (i === curPage ? ' active' : '');
+        pDots.appendChild(d);
     }
-}
-
-function setActivePage(n) {
-    var dots = pageDots.querySelectorAll('.page-dot');
-    dots.forEach(function(d, i) { d.classList.toggle('active', i === n); });
-    var total = dots.length;
-    pageNumLabel.textContent = (n + 1) + ' / ' + total;
-    currentPage = n;
+    pNum.textContent = (curPage + 1) + ' / ' + totalP;
 }
 
 // =============================================
-//  6. 拖拽 + 惯性 + Snap
+//  4. 翻页引擎（核心）
 // =============================================
-var isDragging = false;
-var startX = 0;
-var scrollStartTX = 0;
-var velX = 0;
-var lastX = 0;
-var lastTime = 0;
-var aid = null;
-var isAnimating = false;
-var tx = 0;
-var pageWidth = viewport.clientWidth;
-var maxTx = 0;
-var currentPage = 0;
-var totalPages = 1;
+var isDown = false, px = 0, startTx = 0, tx = 0, vx = 0, lx = 0, lt = 0;
+var anim = null;
+var PAGE_W = 0;
 
-var FRICTION = 0.91;
-var SNAP_THRESHOLD = 0.3; // 超过 30% 宽度触发翻页
-
-function updateMaxScroll() {
-    pageWidth = viewport.clientWidth;
-    var total = content.children.length;
-    totalPages = Math.max(1, total);
-    maxTx = (totalPages - 1) * pageWidth;
+function getPageW() {
+    PAGE_W = sx.clientWidth;
 }
 
-function clampTx(x) { return Math.max(-maxTx, Math.min(0, x)); }
-
-function applyTx(x, snap) {
-    tx = clampTx(x);
-    content.style.transform = 'translateX(' + tx + 'px) translateZ(0)';
-    if (snap !== false) updatePageFromTx();
+function goToPage(n, anim) {
+    getPageW();
+    n = Math.max(0, Math.min(totalP - 1, n));
+    curPage = n;
+    tx = -n * PAGE_W;
+    track.style.transition = anim !== false ? 'transform 0.5s cubic-bezier(0.22,1,0.36,1)' : 'none';
+    track.style.transform = 'translateX(' + tx + 'px) translateZ(0)';
+    updateDots();
 }
 
-function updatePageFromTx() {
-    if (pageWidth <= 0) return;
-    var raw = -tx / pageWidth;
-    var n = Math.round(raw);
-    n = Math.max(0, Math.min(totalPages - 1, n));
-    setActivePage(n);
+// 拖拽
+function onPD(e) {
+    isDown = true; vx = 0;
+    if (anim) { cancelAnimationFrame(anim); anim = null; }
+    var pt = e.touches ? e.touches[0] : e;
+    px = pt.clientX; lx = px; lt = Date.now();
+    startTx = tx;
+    track.style.transition = 'none';
 }
 
-function snapToPage(n, animate) {
-    n = Math.max(0, Math.min(totalPages - 1, n));
-    var target = -n * pageWidth;
-    if (animate) {
-        // 动画过渡
-        var start = tx;
-        var diff = target - start;
-        var duration = 300;
-        var t0 = performance.now();
-        function animSnap(now) {
-            var p = Math.min(1, (now - t0) / duration);
-            var ease = 1 - Math.pow(1 - p, 3); // easeOutCubic
-            applyTx(start + diff * ease, false);
-            if (p < 1) requestAnimationFrame(animSnap);
-            else { applyTx(target, true); setActivePage(n); }
+function onPM(e) {
+    if (!isDown) return;
+    e.preventDefault();
+    var pt = e.touches ? e.touches[0] : e;
+    var dx = pt.clientX - px;
+    var now = Date.now(); var dt = now - lt;
+    if (dt > 0) { vx = (pt.clientX - lx) / dt * 16; vx = Math.max(-30, Math.min(30, vx)); }
+    lx = pt.clientX; lt = now;
+
+    getPageW();
+    var t = startTx + dx;
+    // 边缘阻尼
+    if (t > 0) t = t * 0.2;
+    if (t < -(totalP - 1) * PAGE_W) t = -(totalP - 1) * PAGE_W + (t + (totalP - 1) * PAGE_W) * 0.2;
+    track.style.transform = 'translateX(' + t + 'px) translateZ(0)';
+    tx = t;
+}
+
+function onPU(e) {
+    if (!isDown) return; isDown = false;
+    getPageW();
+    // 判断翻页
+    var target = -curPage * PAGE_W;
+    if (Math.abs(vx) > 5) {
+        var dir = vx > 0 ? -1 : 1;
+        goToPage(curPage + dir, true);
+    } else {
+        var offset = -tx / PAGE_W;
+        var nearest = Math.round(offset);
+        if (Math.abs(offset - nearest) > 0.15) {
+            goToPage(nearest, true);
+        } else {
+            goToPage(curPage, true);
         }
-        requestAnimationFrame(animSnap);
-    } else {
-        applyTx(target);
-        setActivePage(n);
     }
 }
 
-// ---- 指针事件 ----
-function onDown(e) {
-    isDragging = true;
-    isAnimating = false;
-    if (aid) { cancelAnimationFrame(aid); aid = null; }
-    velX = 0;
-    var pt = e.touches ? e.touches[0] : e;
-    startX = pt.clientX;
-    lastX = pt.clientX;
-    lastTime = Date.now();
-    scrollStartTX = tx;
-    updateMaxScroll();
-}
-
-function onMove(e) {
-    if (!isDragging) return;
+// 滚轮
+function onW(e) {
     e.preventDefault();
-    var pt = e.touches ? e.touches[0] : e;
-    var dx = pt.clientX - startX;
-    var now = Date.now();
-    var dt = now - lastTime;
-    if (dt > 0) { velX = (pt.clientX - lastX) / dt * 16; velX = Math.max(-40, Math.min(40, velX)); }
-    lastX = pt.clientX;
-    lastTime = now;
-    applyTx(scrollStartTX + dx);
+    getPageW();
+    var d = e.deltaY > 0 ? 1 : -1;
+    goToPage(curPage + d, true);
 }
 
-function onUp(e) {
-    if (!isDragging) return;
-    isDragging = false;
-    // 判断是否应该翻页
-    var pageOffset = -tx / pageWidth;
-    var frac = pageOffset - Math.floor(pageOffset);
-    var pageIndex = Math.round(pageOffset);
-
-    // 如果速度够大或偏移够大，触发翻页
-    if (Math.abs(velX) > 8) {
-        var dir = velX > 0 ? -1 : 1;
-        snapToPage(currentPage + dir, true);
-    } else if (Math.abs(frac - 0.5) > SNAP_THRESHOLD) {
-        snapToPage(pageIndex, true);
-    } else {
-        snapToPage(currentPage, true);
-    }
-}
-
-// ---- 滚轮 ----
-function onWheel(e) {
-    e.preventDefault();
-    var delta = e.deltaY || 0;
-    updateMaxScroll();
-    var move = delta * 0.6;
-    applyTx(tx + move);
-    // 惯性
-    velX = delta * 0.04;
-    velX = Math.max(-15, Math.min(15, velX));
-    if (Math.abs(velX) > 2) {
-        (function(v) {
-            function loop() {
-                v *= 0.88;
-                if (Math.abs(v) < 0.5) { updatePageFromTx(); return; }
-                applyTx(tx + v);
-                requestAnimationFrame(loop);
-            }
-            requestAnimationFrame(loop);
-        })(velX);
-    } else {
-        updatePageFromTx();
-    }
-}
-
-// ---- 键盘左右翻页 ----
-function onKey(e) {
+// 键盘
+function onK(e) {
     if (lb.classList.contains('open')) return;
-    if (e.key === 'ArrowLeft') { e.preventDefault(); snapToPage(currentPage - 1, true); }
-    if (e.key === 'ArrowRight') { e.preventDefault(); snapToPage(currentPage + 1, true); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); goToPage(curPage - 1, true); }
+    if (e.key === 'ArrowRight') { e.preventDefault(); goToPage(curPage + 1, true); }
 }
 
-// ---- 窗口 resize ----
-function onResize() {
-    updateMaxScroll();
-    // 保持当前页
-    snapToPage(currentPage, false);
+function onRS() {
+    getPageW();
+    goToPage(curPage, false);
 }
 
-// ---- 绑定 ----
-viewport.addEventListener('mousedown', onDown);
-window.addEventListener('mousemove', onMove);
-window.addEventListener('mouseup', onUp);
+// 绑定事件
+sx.addEventListener('mousedown', onPD);
+window.addEventListener('mousemove', onPM);
+window.addEventListener('mouseup', onPU);
 
-viewport.addEventListener('touchstart', onDown, { passive: true });
-window.addEventListener('touchmove', onMove, { passive: false });
-window.addEventListener('touchend', onUp);
+sx.addEventListener('touchstart', onPD, { passive: true });
+window.addEventListener('touchmove', onPM, { passive: false });
+window.addEventListener('touchend', onPU);
 
-viewport.addEventListener('wheel', onWheel, { passive: false });
-document.addEventListener('keydown', onKey);
-window.addEventListener('resize', onResize);
+sx.addEventListener('wheel', onW, { passive: false });
+document.addEventListener('keydown', onK);
+window.addEventListener('resize', onRS);
 
 // =============================================
-//  7. 3D 鼠标视差（阻尼跟随）
+//  5. 3D 鼠标视差
 // =============================================
 (function() {
-    var tRX = 0, tRY = 0, cRX = 0, cRY = 0, aid2 = null;
-    var mob = window.innerWidth <= 720;
-    function onMove(e) { if (mob) return;
-        var r = mask.getBoundingClientRect();
-        var nx = Math.max(-1, Math.min(1, (e.clientX - r.left - r.width/2)/(r.width/2)));
-        var ny = Math.max(-1, Math.min(1, (e.clientY - r.top - r.height/2)/(r.height/2)));
-        tRY = nx*Math.abs(nx)*3; tRX = ny*Math.abs(ny)*-2.5;
-        if (!aid2) aid2 = requestAnimationFrame(tick);
+    var tX=0,tY=0,cX=0,cY=0,a=null;
+    function mv(e) {
+        if (window.innerWidth <= 720) return;
+        var r = stageWrap.getBoundingClientRect();
+        var nx = (e.clientX - r.left - r.width/2) / (r.width/2);
+        var ny = (e.clientY - r.top - r.height/2) / (r.height/2);
+        nx = Math.max(-1,Math.min(1,nx)); ny = Math.max(-1,Math.min(1,ny));
+        tY = nx*Math.abs(nx)*3; tX = ny*Math.abs(ny)*-2.5;
+        if (!a) a = requestAnimationFrame(tk);
     }
-    function tick() { var l=0.08; cRX+=(tRX-cRX)*l; cRY+=(tRY-cRY)*l;
-        stage.style.transform='rotateX('+cRX+'deg) rotateY('+cRY+'deg)';
-        if (Math.abs(tRX-cRX)>0.01||Math.abs(tRY-cRY)>0.01) aid2=requestAnimationFrame(tick);
-        else { cRX=tRX;cRY=tRY;stage.style.transform='rotateX('+cRX+'deg) rotateY('+cRY+'deg)';aid2=null; }
+    function tk() {
+        var l=0.08; cX+=(tX-cX)*l; cY+=(tY-cY)*l;
+        stage.style.transform='rotateX('+cX+'deg) rotateY('+cY+'deg)';
+        if (Math.abs(tX-cX)>0.01||Math.abs(tY-cY)>0.01) a=requestAnimationFrame(tk);
+        else { cX=tX;cY=tY;stage.style.transform='rotateX('+cX+'deg) rotateY('+cY+'deg)';a=null; }
     }
-    function onLeave() { tRX=0;tRY=0;if(!aid2)aid2=requestAnimationFrame(tick); }
-    function onResize2() { mob = window.innerWidth <= 720; }
-    mask.addEventListener('mousemove', onMove);
-    mask.addEventListener('mouseleave', onLeave);
-    window.addEventListener('resize', onResize2);
+    function lv() { tX=0;tY=0;if(!a)a=requestAnimationFrame(tk); }
+    stageWrap.addEventListener('mousemove',mv);
+    stageWrap.addEventListener('mouseleave',lv);
 })();
 
 // =============================================
-//  8. Lightbox
+//  6. Lightbox
 // =============================================
-var allPhotos = [];
-
-function openLB(idx, photosArr) {
-    allPhotos = photosArr || PHOTOS;
-    currentLBIndex = idx;
-    var p = allPhotos[idx]; if (!p) return;
+function openLB(i) {
+    curIdx = i; var p = allPh[i]; if (!p) return;
     lbImg.src = p.src; lbImg.alt = p.title;
-    lbTitle.textContent = p.title + ' · ' + (TAG_LABEL[p.tag] || p.tag);
-    lbCounter.textContent = (idx + 1) + ' / ' + allPhotos.length;
-    lb.classList.add('open');
-    document.body.style.overflow = 'hidden';
+    lbT.textContent = p.title+' · '+(TAG[p.tag]||p.tag);
+    lbC.textContent = (i+1)+' / '+allPh.length;
+    lb.classList.add('open'); document.body.style.overflow='hidden';
 }
-function closeLB() { lb.classList.remove('open'); document.body.style.overflow = ''; }
-function prevLB() { if (allPhotos.length) { currentLBIndex = (currentLBIndex - 1 + allPhotos.length) % allPhotos.length; syncLB(); } }
-function nextLB() { if (allPhotos.length) { currentLBIndex = (currentLBIndex + 1) % allPhotos.length; syncLB(); } }
-function syncLB() { var p = allPhotos[currentLBIndex]; if (p) { lbImg.src=p.src; lbImg.alt=p.title; lbTitle.textContent=p.title+' · '+(TAG_LABEL[p.tag]||p.tag); lbCounter.textContent=(currentLBIndex+1)+' / '+allPhotos.length; } }
+function closeLB() { lb.classList.remove('open'); document.body.style.overflow=''; }
+function pLB() { if (allPh.length) { curIdx=(curIdx-1+allPh.length)%allPh.length; sLB(); } }
+function nLB() { if (allPh.length) { curIdx=(curIdx+1)%allPh.length; sLB(); } }
+function sLB() { var p=allPh[curIdx]; if(p) { lbImg.src=p.src;lbImg.alt=p.title;lbT.textContent=p.title+' · '+(TAG[p.tag]||p.tag);lbC.textContent=(curIdx+1)+' / '+allPh.length; } }
 
-lbClose.addEventListener('click', closeLB);
-lb.addEventListener('click', function(e) { if (e.target === lb) closeLB(); });
-lbPrev.addEventListener('click', function(e) { e.stopPropagation(); prevLB(); });
-lbNext.addEventListener('click', function(e) { e.stopPropagation(); nextLB(); });
-document.addEventListener('keydown', function(e) {
-    if (!lb.classList.contains('open')) return;
-    if (e.key === 'Escape') { closeLB(); return; }
-    if (e.key === 'ArrowLeft') { e.preventDefault(); prevLB(); return; }
-    if (e.key === 'ArrowRight') { e.preventDefault(); nextLB(); return; }
+lbClose.addEventListener('click',closeLB);
+lb.addEventListener('click',function(e){if(e.target===lb)closeLB();});
+lbPrev.addEventListener('click',function(e){e.stopPropagation();pLB();});
+lbNext.addEventListener('click',function(e){e.stopPropagation();nLB();});
+document.addEventListener('keydown',function(e){
+    if(!lb.classList.contains('open')) return;
+    if(e.key==='Escape'){closeLB();return;}
+    if(e.key==='ArrowLeft'){e.preventDefault();pLB();return;}
+    if(e.key==='ArrowRight'){e.preventDefault();nLB();return;}
 });
 
 // =============================================
-//  9. 筛选
+//  7. 筛选
 // =============================================
-filterBtns.forEach(function(btn) {
-    btn.addEventListener('click', function() {
-        filterBtns.forEach(function(b) { b.classList.remove('active'); });
-        btn.classList.add('active');
-        render(btn.getAttribute('data-filter'));
-        setTimeout(updateMaxScroll, 50);
+fBtns.forEach(function(b){
+    b.addEventListener('click',function(){
+        fBtns.forEach(function(x){x.classList.remove('active');});
+        b.classList.add('active');
+        render(b.getAttribute('data-filter'));
+        setTimeout(getPageW,50);
     });
 });
 
 // =============================================
-//  10. 启动
+//  8. 启动
 // =============================================
 render('all');
-setTimeout(updateMaxScroll, 100);
+setTimeout(getPageW,100);
 </script>
 </body>
 </html>
