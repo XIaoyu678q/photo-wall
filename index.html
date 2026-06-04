@@ -3,232 +3,132 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>📸 照片墙</title>
+<title>📸 照片墙 · 视界</title>
 <style>
 /* =============================================
-   照片墙 — 互动版（3D倾角 · 鼠标追踪 · 动感网格）
+   照片墙 — 3D 视差 · 深度错落 · 鼠标滑移
    ============================================= */
 
-/* ---------- CSS 变量 ---------- */
 :root {
-    --color-bg: #f4f4f6;
-    --color-surface: #ffffff;
-    --color-text: #1a1a2e;
-    --color-text-light: #6b7280;
-    --color-text-muted: #9ca3af;
-    --color-accent: #4f46e5;
-    --color-accent-glow: rgba(79,70,229,0.3);
-    --color-border: rgba(0,0,0,0.06);
-    --color-overlay: rgba(0,0,0,0.78);
-
+    --bg: #f0f0f4;
+    --surface: #ffffff;
+    --accent: #4f46e5;
+    --text: #1a1a2e;
+    --text-light: #6b7280;
+    --text-muted: #9ca3af;
+    --radius: 14px;
     --gap: 18px;
-    --radius-card: 14px;
-    --radius-pill: 9999px;
-
-    --shadow-card: 0 2px 8px rgba(0,0,0,0.06);
-    --shadow-hover: 0 20px 50px rgba(0,0,0,0.18);
-
     --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif;
-
-    --transition: 0.35s cubic-bezier(0.22, 1, 0.36, 1);
-    --transition-fast: 0.18s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
-html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+html { -webkit-font-smoothing: antialiased; }
 
 body {
     font-family: var(--font);
-    background: var(--color-bg);
-    color: var(--color-text);
-    line-height: 1.7;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
     overflow-x: hidden;
 }
 
 img { display: block; max-width: 100%; }
 
 /* ================================
-   鼠标跟随光晕
-   ================================ */
-#cursorGlow {
-    position: fixed;
-    width: 400px;
-    height: 400px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(79,70,229,0.08) 0%, transparent 70%);
-    pointer-events: none;
-    z-index: 1;
-    transform: translate(-50%, -50%);
-    transition: opacity 0.4s ease;
-    will-change: transform;
-}
-
-/* ================================
-   头部 — 暗色质感 + 视差
+   头部 — 毛玻璃暗色
    ================================ */
 .header {
-    position: relative;
-    isolation: isolate;
-    padding: 90px 20px 75px;
-    text-align: center;
-    overflow: hidden;
+    position: relative; isolation: isolate;
+    padding: 80px 20px 60px; text-align: center; overflow: hidden;
 }
-
 .header-bg {
-    position: absolute;
-    inset: -40px;
-    z-index: -2;
-    background:
-        radial-gradient(ellipse 70% 50% at 50% 20%, #2d2a5e 0%, transparent 70%),
-        radial-gradient(ellipse 50% 40% at 80% 80%, #1e1b4b 0%, transparent 60%),
-        linear-gradient(145deg, #0f0c29, #1a1a3e 45%, #242250);
+    position: absolute; inset: -40px; z-index: -2;
+    background: radial-gradient(ellipse 70% 50% at 50% 20%, #2d2a5e 0%, transparent 70%),
+                radial-gradient(ellipse 50% 40% at 80% 80%, #1e1b4b 0%, transparent 60%),
+                linear-gradient(145deg, #0f0c29, #1a1a3e 45%, #242250);
 }
-
-.header-noise {
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    opacity: 0.04;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-}
-
-.header-icon {
-    font-size: 3rem;
-    display: block;
-    margin-bottom: 10px;
-    animation: floatY 3s ease-in-out infinite;
-}
-
-.site-title {
-    font-size: 3.4rem;
-    font-weight: 200;
-    letter-spacing: 8px;
-    color: rgba(255,255,255,0.92);
-}
-
+.header-icon { font-size: 2.8rem; display: block; margin-bottom: 10px; }
+.site-title { font-size: 3.2rem; font-weight: 200; letter-spacing: 8px; color: rgba(255,255,255,0.92); }
 .site-title strong { font-weight: 600; letter-spacing: 2px; }
-
-.site-desc {
-    font-size: 1rem;
-    font-weight: 300;
-    letter-spacing: 5px;
-    color: rgba(255,255,255,0.4);
-    margin-top: 8px;
-}
+.site-desc { font-size: 1rem; font-weight: 300; letter-spacing: 5px; color: rgba(255,255,255,0.4); margin-top: 6px; }
 
 /* ================================
    筛选栏
    ================================ */
 .filters {
-    padding: 20px 0 16px;
-    text-align: center;
-    background: rgba(255,255,255,0.72);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    position: sticky;
-    top: 0;
-    z-index: 50;
-    border-bottom: 1px solid var(--color-border);
+    padding: 18px 0 14px; text-align: center;
+    background: rgba(255,255,255,0.7); backdrop-filter: blur(16px);
+    position: sticky; top: 0; z-index: 50;
+    border-bottom: 1px solid rgba(0,0,0,0.04);
 }
-
-/* 磁性按钮 — 鼠标靠近时略微移动 */
 .filter-btn {
-    position: relative;
-    display: inline-block;
-    border: 1.5px solid #e5e7eb;
-    background: transparent;
-    color: var(--color-text-light);
-    padding: 7px 22px;
-    margin: 4px 5px;
-    border-radius: var(--radius-pill);
-    font-size: 0.875rem;
-    font-weight: 500;
-    font-family: var(--font);
-    letter-spacing: 0.3px;
-    cursor: pointer;
-    transition: background var(--transition-fast), color var(--transition-fast),
-                border-color var(--transition-fast), box-shadow var(--transition-fast);
+    display: inline-block; border: 1.5px solid #e5e7eb; background: transparent;
+    color: var(--text-light); padding: 6px 20px; margin: 3px 4px;
+    border-radius: 9999px; font-size: 0.85rem; font-weight: 500;
+    font-family: var(--font); letter-spacing: 0.3px; cursor: pointer;
+    transition: background 0.25s, color 0.25s, border-color 0.25s, box-shadow 0.25s;
     user-select: none;
 }
+.filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+.filter-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: 0 4px 16px rgba(79,70,229,0.35); }
 
-.filter-btn:hover {
-    border-color: var(--color-accent);
-    color: var(--color-accent);
+/* ================================
+   3D 视差场景容器
+   ================================ */
+.scene {
+    perspective: 1200px;
+    perspective-origin: 50% 50%;
+    padding: 8px 0 40px;
+    overflow: visible;
 }
 
-.filter-btn.active {
-    background: var(--color-accent);
-    color: #fff;
-    border-color: var(--color-accent);
-    box-shadow: 0 4px 16px rgba(79,70,229,0.35);
+/* 场景内的观察者包装 — 响应鼠标位置旋转 */
+.scene__stage {
+    transform-style: preserve-3d;
+    will-change: transform;
+    transition: transform 0.08s cubic-bezier(0.22, 1, 0.36, 1);
+    max-width: 1340px;
+    margin: 0 auto;
+    padding: 0 16px;
 }
 
 /* ================================
-   照片网格 — Grid + 动态交错
+   照片网格 — 4列
    ================================ */
-.gallery {
-    padding: var(--gap) 0 50px;
-    position: relative;
-    z-index: 2;
-}
-
 .gallery-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: var(--gap);
-    padding: var(--gap) 0;
+    transform-style: preserve-3d;
 }
 
-/* 照片卡片 */
+/* ---------- 每张卡片 ---------- */
 .gallery-item {
     position: relative;
-    border-radius: var(--radius-card);
+    border-radius: var(--radius);
     overflow: hidden;
     cursor: pointer;
-    background: var(--color-surface);
-    box-shadow: var(--shadow-card);
-    /* 3D 透视由 JS 动态控制 */
+    background: var(--surface);
     transform-style: preserve-3d;
+    /* 每个卡片由 JS 赋予不同的 translateZ 实现深度错落 */
     will-change: transform;
-    transition: box-shadow var(--transition);
+    transition: box-shadow 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+                transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
     animation: cardIn 0.5s ease both;
 }
 
-/* 内部反射光泽层（跟随鼠标） */
-.gallery-item .gloss {
-    position: absolute;
-    inset: 0;
-    z-index: 3;
-    pointer-events: none;
-    border-radius: inherit;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.25) 0%, transparent 60%);
-}
-
-.gallery-item:hover .gloss {
-    opacity: 1;
-}
-
-/* 图片容器 */
+/* ---------- 图片容器 ---------- */
 .gallery-item .img-wrapper {
-    position: relative;
-    overflow: hidden;
-    line-height: 0;
-    border-radius: inherit;
+    position: relative; overflow: hidden; line-height: 0; border-radius: inherit;
 }
 
 .gallery-item img {
-    width: 100%;
-    height: auto;
-    display: block;
-    transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    width: 100%; height: auto; display: block;
+    transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    backface-visibility: hidden;
 }
-
-.gallery-item:hover img {
-    transform: scale(1.1);
-}
+.gallery-item:hover img { transform: scale(1.12); }
 
 /* ---------- 骨架屏 ---------- */
 .skeleton {
@@ -237,117 +137,76 @@ img { display: block; max-width: 100%; }
     background-image: linear-gradient(90deg, #e8e8ec 0%, #f2f2f6 40%, #e8e8ec 80%);
     background-size: 200% 100%;
 }
-.skeleton-h { aspect-ratio: 3/2; }
-.skeleton-v { aspect-ratio: 2/3; }
-.skeleton-sq { aspect-ratio: 1/1; }
-.skeleton-w { aspect-ratio: 16/9; }
-
+.skel-h { aspect-ratio: 3/2; }
+.skel-v { aspect-ratio: 2/3; }
+.skel-sq { aspect-ratio: 1/1; }
+.skel-w { aspect-ratio: 16/9; }
 .img-wrapper.loaded .skeleton { display: none; }
 
-/* ---------- 悬浮覆盖层 ---------- */
+/* ---------- 信息覆盖层 ---------- */
 .gallery-item .overlay {
-    position: absolute;
-    inset: 0;
-    z-index: 2;
-    background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.15) 40%, transparent 60%);
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
+    position: absolute; inset: 0; z-index: 2;
+    background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.1) 40%, transparent 60%);
+    display: flex; flex-direction: column; justify-content: flex-end;
     padding: 28px 16px 16px;
     opacity: 0;
-    transition: opacity var(--transition);
+    transition: opacity 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
-
 .gallery-item:hover .overlay { opacity: 1; }
 
 .overlay .photo-title {
-    color: #fff;
-    font-size: 0.9rem;
-    font-weight: 500;
-    letter-spacing: 0.3px;
-    transform: translateY(10px);
-    transition: transform var(--transition);
+    color: #fff; font-size: 0.9rem; font-weight: 500; letter-spacing: 0.3px;
+    transform: translateY(12px); transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
-
 .gallery-item:hover .photo-title { transform: translateY(0); }
 
 .overlay .photo-tag {
-    display: inline-block;
-    font-size: 0.65rem;
-    color: rgba(255,255,255,0.6);
-    background: rgba(255,255,255,0.12);
-    backdrop-filter: blur(4px);
-    padding: 2px 10px;
-    border-radius: var(--radius-pill);
-    margin-top: 5px;
-    width: fit-content;
-    transform: translateY(10px);
-    transition: transform var(--transition);
+    display: inline-block; font-size: 0.65rem; color: rgba(255,255,255,0.6);
+    background: rgba(255,255,255,0.12); backdrop-filter: blur(4px);
+    padding: 2px 10px; border-radius: 9999px; margin-top: 5px; width: fit-content;
+    transform: translateY(12px); transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1) 0.03s;
 }
-
 .gallery-item:hover .photo-tag { transform: translateY(0); }
 
 .overlay .view-hint {
-    position: absolute;
-    top: 50%;
-    left: 50%;
+    position: absolute; top: 50%; left: 50%;
     transform: translate(-50%, -50%) scale(0.85);
-    color: #fff;
-    font-size: 0.8rem;
-    letter-spacing: 1px;
-    background: rgba(255,255,255,0.1);
-    backdrop-filter: blur(10px);
+    color: #fff; font-size: 0.8rem; letter-spacing: 1px;
+    background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);
     border: 1px solid rgba(255,255,255,0.15);
-    padding: 9px 20px;
-    border-radius: var(--radius-pill);
-    opacity: 0;
-    transition: opacity var(--transition), transform var(--transition);
+    padding: 9px 20px; border-radius: 9999px;
+    opacity: 0; transition: opacity 0.35s ease, transform 0.35s ease;
     pointer-events: none;
 }
-
 .gallery-item:hover .view-hint { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+
+/* ---------- 卡片悬浮提升 — 由 JS 控制增强 ---------- */
+.gallery-item.lifted {
+    z-index: 10;
+}
 
 /* ================================
    Lightbox
    ================================ */
 .lightbox {
-    position: fixed;
-    inset: 0;
-    z-index: 999;
-    background: var(--color-overlay);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.4s ease;
+    position: fixed; inset: 0; z-index: 999;
+    background: rgba(0,0,0,0.78); backdrop-filter: blur(24px);
+    display: flex; justify-content: center; align-items: center;
+    opacity: 0; pointer-events: none; transition: opacity 0.4s ease;
 }
-
 .lightbox.open { opacity: 1; pointer-events: auto; }
 
 .lightbox-inner {
-    position: relative;
-    max-width: 88vw;
-    max-height: 88vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    transform: scale(0.9);
-    transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    position: relative; max-width: 88vw; max-height: 88vh;
+    display: flex; flex-direction: column; align-items: center;
+    transform: scale(0.92); transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
-
 .lightbox.open .lightbox-inner { transform: scale(1); }
 
 .lightbox-inner img {
-    max-width: 100%;
-    max-height: 78vh;
-    border-radius: var(--radius-card);
-    box-shadow: 0 25px 80px rgba(0,0,0,0.5);
-    object-fit: contain;
+    max-width: 100%; max-height: 78vh; border-radius: var(--radius);
+    box-shadow: 0 25px 80px rgba(0,0,0,0.5); object-fit: contain;
     user-select: none;
-    -webkit-user-drag: none;
 }
 
 .lightbox-info {
@@ -355,14 +214,13 @@ img { display: block; max-width: 100%; }
     width: 100%; padding: 14px 4px 0;
     color: rgba(255,255,255,0.7); font-size: 0.85rem;
 }
-
 .lb-counter { font-size: 0.8rem; color: rgba(255,255,255,0.4); }
 
 .lb-close {
-    position: absolute; top: -48px; right: -6px;
+    position: absolute; top: -46px; right: -6px;
     color: rgba(255,255,255,0.5); font-size: 2.2rem; line-height: 1;
     cursor: pointer; background: none; border: none; font-family: var(--font);
-    transition: color var(--transition-fast), transform var(--transition-fast);
+    transition: color 0.25s, transform 0.25s;
 }
 .lb-close:hover { color: #fff; transform: rotate(90deg) scale(1.1); }
 
@@ -371,44 +229,27 @@ img { display: block; max-width: 100%; }
     background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.06);
     color: rgba(255,255,255,0.5); font-size: 1.3rem;
     padding: 14px 10px; cursor: pointer; border-radius: 8px; line-height: 1;
-    transition: background var(--transition-fast), color var(--transition-fast);
-    font-family: var(--font);
+    transition: background 0.25s, color 0.25s; font-family: var(--font);
 }
 .lb-nav:hover { background: rgba(255,255,255,0.12); color: #fff; }
-.lb-prev { left: -56px; }
-.lb-next { right: -56px; }
-
-.lb-hint {
-    position: absolute; bottom: -34px;
-    color: rgba(255,255,255,0.15); font-size: 0.65rem; letter-spacing: 1px;
-    font-weight: 300;
-}
+.lb-prev { left: -56px; } .lb-next { right: -56px; }
+.lb-hint { position: absolute; bottom: -34px; color: rgba(255,255,255,0.15); font-size: 0.65rem; letter-spacing: 1px; font-weight: 300; }
 
 /* ================================
    页脚
    ================================ */
-.footer {
-    text-align: center; padding: 28px 20px 36px;
-    color: var(--color-text-muted); font-size: 0.75rem; letter-spacing: 1px;
-    font-weight: 300; border-top: 1px solid var(--color-border);
-}
+.footer { text-align: center; padding: 24px 20px 32px; color: var(--text-muted); font-size: 0.75rem; letter-spacing: 1px; font-weight: 300; border-top: 1px solid rgba(0,0,0,0.05); }
 
 /* ================================
    动画
    ================================ */
 @keyframes cardIn {
-    from { opacity: 0; transform: translateY(30px) scale(0.96); }
-    to   { opacity: 1; transform: translateY(0) scale(1); }
+    from { opacity: 0; transform: translateY(30px) scale(0.95) translateZ(0); }
+    to   { opacity: 1; transform: translateY(0) scale(1) translateZ(0); }
 }
-
 @keyframes shimmer {
     0%   { background-position: 200% 0; }
     100% { background-position: -200% 0; }
-}
-
-@keyframes floatY {
-    0%, 100% { transform: translateY(0); }
-    50%      { transform: translateY(-10px); }
 }
 
 /* ================================
@@ -416,42 +257,40 @@ img { display: block; max-width: 100%; }
    ================================ */
 @media (max-width: 1024px) {
     .gallery-grid { grid-template-columns: repeat(3, 1fr); }
+    .site-title { font-size: 2.6rem; }
 }
-
 @media (max-width: 720px) {
     .gallery-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
-    .header { padding: 55px 16px 50px; }
-    .site-title { font-size: 2.2rem; letter-spacing: 5px; }
+    .header { padding: 50px 16px 44px; }
+    .site-title { font-size: 2rem; letter-spacing: 4px; }
     .site-desc { font-size: 0.85rem; letter-spacing: 3px; }
     .filter-btn { padding: 5px 14px; font-size: 0.78rem; margin: 3px 2px; }
-    .lb-prev { left: 6px; }
-    .lb-next { right: 6px; }
+    /* 手机上关闭 3D 视差（性能 + UX） */
+    .scene { perspective: none; }
+    .scene__stage { transform: none !important; }
+    .gallery-item { transform: none !important; }
+    .lb-prev { left: 6px; } .lb-next { right: 6px; }
     .lb-nav { font-size: 1rem; padding: 10px 7px; }
     .lb-close { top: -38px; right: 0; font-size: 1.6rem; }
 }
-
 @media (max-width: 440px) {
     .gallery-grid { grid-template-columns: 1fr; gap: 14px; }
-    .site-title { font-size: 1.8rem; }
+    .site-title { font-size: 1.6rem; }
 }
 </style>
 </head>
 <body>
 
-<!-- ===== 鼠标跟随光晕 ===== -->
-<div id="cursorGlow"></div>
-
 <!-- ===== 头部 ===== -->
-<header class="header" id="header">
+<header class="header">
     <div class="header-bg"></div>
-    <div class="header-noise"></div>
     <span class="header-icon">📸</span>
     <h1 class="site-title"><strong>照片</strong>墙</h1>
     <p class="site-desc">用光影定格美好瞬间</p>
 </header>
 
 <!-- ===== 筛选栏 ===== -->
-<nav class="filters" id="filters">
+<nav class="filters">
     <button class="filter-btn active" data-filter="all">全部</button>
     <button class="filter-btn" data-filter="nature">🌿 自然</button>
     <button class="filter-btn" data-filter="city">🏙️ 城市</button>
@@ -459,12 +298,12 @@ img { display: block; max-width: 100%; }
     <button class="filter-btn" data-filter="animal">🐾 动物</button>
 </nav>
 
-<!-- ===== 照片网格 ===== -->
-<main class="gallery">
-    <div class="container" style="max-width:1320px;margin:0 auto;padding:0 18px;">
+<!-- ===== 3D 视差场景 ===== -->
+<div class="scene" id="scene">
+    <div class="scene__stage" id="stage">
         <div class="gallery-grid" id="galleryGrid"></div>
     </div>
-</main>
+</div>
 
 <!-- ===== Lightbox ===== -->
 <div class="lightbox" id="lightbox">
@@ -477,11 +316,10 @@ img { display: block; max-width: 100%; }
             <span id="lbTitle"></span>
             <span class="lb-counter" id="lbCounter"></span>
         </div>
-        <span class="lb-hint">←  →  键盘切换</span>
+        <span class="lb-hint">←  →  键盘切换 · Esc 关闭</span>
     </div>
 </div>
 
-<!-- ===== 页脚 ===== -->
 <footer class="footer"><span>Made with ❤️ &middot; Powered by GitHub Pages</span></footer>
 
 <script>
@@ -492,18 +330,15 @@ var PHOTOS = [];
 for (var i = 1; i <= 33; i++) {
     PHOTOS.push({ id: i, src: 'images/' + i + '.jpg', title: '照片 ' + i, tag: 'nature' });
 }
-
-var TAG_LABEL = {
-    nature: '🌿 自然', city: '🏙️ 城市',
-    people: '👤 人物', animal: '🐾 动物'
-};
-
-var SKELETONS = ['skeleton-h', 'skeleton-v', 'skeleton-sq', 'skeleton-w'];
+var TAG_LABEL = { nature: '🌿 自然', city: '🏙️ 城市', people: '👤 人物', animal: '🐾 动物' };
+var SKELS = ['skel-h','skel-v','skel-sq','skel-w'];
 
 // =============================================
 //  2. DOM
 // =============================================
 var gridEl = document.getElementById('galleryGrid');
+var scene = document.getElementById('scene');
+var stage = document.getElementById('stage');
 var filterBtns = document.querySelectorAll('.filter-btn');
 var lb = document.getElementById('lightbox');
 var lbImg = document.getElementById('lbImage');
@@ -512,11 +347,13 @@ var lbCounter = document.getElementById('lbCounter');
 var lbClose = document.getElementById('lbClose');
 var lbPrev = document.getElementById('lbPrev');
 var lbNext = document.getElementById('lbNext');
-var glow = document.getElementById('cursorGlow');
 
 var currentFilter = 'all';
 var currentIndex = 0;
 var filtered = [];
+var cards = [];         // 当前卡片 DOM 数组
+var cardZ = [];         // 每张卡片的 translateZ 基准值
+var isMobile = window.innerWidth <= 720;
 
 // =============================================
 //  3. 渲染
@@ -527,12 +364,14 @@ function render(filter) {
     filtered = filter === 'all' ? PHOTOS.slice() : PHOTOS.filter(function(p) { return p.tag === filter; });
     gridEl.innerHTML = '';
 
+    cardZ = [];
+
     filtered.forEach(function(photo, idx) {
         var item = document.createElement('div');
         item.className = 'gallery-item';
-        item.style.animationDelay = (idx * 0.04) + 's';
+        item.style.animationDelay = (idx * 0.035) + 's';
 
-        var sk = SKELETONS[photo.id % SKELETONS.length];
+        var sk = SKELS[photo.id % SKELS.length];
         var wrap = document.createElement('div');
         wrap.className = 'img-wrapper';
 
@@ -558,10 +397,6 @@ function render(filter) {
         wrap.appendChild(skeleton);
         wrap.appendChild(img);
 
-        // 光泽层（鼠标追踪用）
-        var gloss = document.createElement('div');
-        gloss.className = 'gloss';
-
         var overlay = document.createElement('div');
         overlay.className = 'overlay';
         overlay.innerHTML =
@@ -570,19 +405,180 @@ function render(filter) {
             '<span class="photo-tag">' + (TAG_LABEL[photo.tag] || photo.tag) + '</span>';
 
         item.appendChild(wrap);
-        item.appendChild(gloss);
         item.appendChild(overlay);
-
         item.addEventListener('click', function() { openLB(idx); });
 
         gridEl.appendChild(item);
+
+        // 给每张卡片分配一个错落的 translateZ 深度值（-30 ~ +40px）
+        // 这样在全局倾斜时产生视差深度感
+        var zBase = ((photo.id * 7 + 13) % 70) - 30; // 范围 -30 ~ +39
+        cardZ.push(zBase);
     });
+
+    // 初次赋予 Z 深度
+    updateCardZ();
+
+    // 存储卡片引用
+    cards = document.querySelectorAll('.gallery-item');
 }
 
 function esc(s) { var d = document.createElement('div'); d.appendChild(document.createTextNode(s)); return d.innerHTML; }
 
+// 批量更新卡片 Z 轴（不含 hover 提升）
+function updateCardZ() {
+    var all = document.querySelectorAll('.gallery-item');
+    all.forEach(function(el, i) {
+        if (!el.classList.contains('lifted')) {
+            var z = cardZ[i] || 0;
+            el.style.transform = 'translateZ(' + z + 'px)';
+        }
+    });
+}
+
 // =============================================
-//  4. Lightbox
+//  4. 全局滑移 3D 视差
+// =============================================
+// 核心逻辑：
+//   鼠标在 scene 内移动 → 计算相对中心点的偏移（-1 ~ +1）
+//   → 应用到 stage: rotateX(上下)  rotateY(左右)  translateX  translateY
+//   → 每个卡片因 translateZ 不同而产生视差错落
+//   使用 requestAnimationFrame 节流 + 缓动系数实现流畅跟随
+
+(function() {
+    var targetRX = 0, targetRY = 0, targetTX = 0, targetTY = 0;
+    var currentRX = 0, currentRY = 0, currentTX = 0, currentTY = 0;
+    var animId = null;
+    var isEnabled = window.innerWidth > 720;
+
+    // 最大旋转角度
+    var MAX_ROTATE = 6;   // deg
+    var MAX_TRANSLATE = 12; // px
+
+    function onMove(e) {
+        if (!isEnabled) return;
+        var rect = scene.getBoundingClientRect();
+        var cx = rect.left + rect.width / 2;
+        var cy = rect.top + rect.height / 2;
+        // 归一化 -1 ~ +1
+        var nx = (e.clientX - cx) / (rect.width / 2);
+        var ny = (e.clientY - cy) / (rect.height / 2);
+        // 限制范围
+        nx = Math.max(-1, Math.min(1, nx));
+        ny = Math.max(-1, Math.min(1, ny));
+
+        // 用平方使中心区更平缓，边缘更灵敏
+        var sx = nx * Math.abs(nx);
+        var sy = ny * Math.abs(ny);
+
+        targetRY = sx * MAX_ROTATE;
+        targetRX = sy * -MAX_ROTATE;
+        targetTX = sx * MAX_TRANSLATE;
+        targetTY = sy * MAX_TRANSLATE;
+
+        if (!animId) animId = requestAnimationFrame(tick);
+    }
+
+    function tick() {
+        // 缓动插值（惯性感）
+        var ease = 0.12;
+        currentRX += (targetRX - currentRX) * ease;
+        currentRY += (targetRY - currentRY) * ease;
+        currentTX += (targetTX - currentTX) * ease;
+        currentTY += (targetTY - currentTY) * ease;
+
+        stage.style.transform =
+            'rotateX(' + currentRX + 'deg) ' +
+            'rotateY(' + currentRY + 'deg) ' +
+            'translateX(' + currentTX + 'px) ' +
+            'translateY(' + currentTY + 'px)';
+
+        // 继续动画直到接近目标
+        var dx = Math.abs(targetRX - currentRX);
+        var dy = Math.abs(targetRY - currentRY);
+        if (dx > 0.01 || dy > 0.01) {
+            animId = requestAnimationFrame(tick);
+        } else {
+            // 定格到目标值
+            currentRX = targetRX; currentRY = targetRY;
+            currentTX = targetTX; currentTY = targetTY;
+            stage.style.transform =
+                'rotateX(' + currentRX + 'deg) ' +
+                'rotateY(' + currentRY + 'deg) ' +
+                'translateX(' + currentTX + 'px) ' +
+                'translateY(' + currentTY + 'px)';
+            animId = null;
+        }
+    }
+
+    function onLeave() {
+        targetRX = 0; targetRY = 0; targetTX = 0; targetTY = 0;
+        if (!animId) animId = requestAnimationFrame(tick);
+    }
+
+    function onResize() {
+        isEnabled = window.innerWidth > 720;
+        if (!isEnabled) {
+            stage.style.transform = '';
+            currentRX = currentRY = currentTX = currentTY = 0;
+            targetRX = targetRY = targetTX = targetTY = 0;
+        }
+    }
+
+    scene.addEventListener('mousemove', onMove);
+    scene.addEventListener('mouseleave', onLeave);
+    window.addEventListener('resize', onResize);
+})();
+
+// =============================================
+//  5. 卡片悬浮：Z 提升 + 阴影 + 视差修正
+// =============================================
+// 当鼠标悬停在一张卡片上时：
+//   该卡片 translateZ 额外增加 40~50px（提升）
+//   阴影加深
+//   周边相邻卡片的视差微调，产生"涟漪"感
+// 鼠标离开后平滑复位
+
+(function() {
+    function bindHover() {
+        document.querySelectorAll('.gallery-item').forEach(function(el, idx) {
+            el.addEventListener('mouseenter', function() {
+                var baseZ = cardZ[idx] || 0;
+                // 提升 +45px，同时加大阴影
+                el.style.transform = 'translateZ(' + (baseZ + 45) + 'px)';
+                el.style.boxShadow = '0 30px 60px rgba(0,0,0,0.25)';
+                el.classList.add('lifted');
+            });
+            el.addEventListener('mouseleave', function() {
+                var baseZ = cardZ[idx] || 0;
+                el.style.transform = 'translateZ(' + baseZ + 'px)';
+                el.style.boxShadow = '';
+                el.classList.remove('lifted');
+            });
+        });
+    }
+
+    // 每次 render 后重新绑定
+    var origRender = render;
+    render = function(filter) {
+        origRender(filter);
+        bindHover();
+    };
+    render('all');
+    // 首次额外绑定（因为渲染时已经调了 render('all')，但 origRender 还没被替换，所以手动补一次）
+    // 其实上面已经调了 render('all') 所以没问题
+    // 但我们需要在初始加载时也绑定
+    // 直接调用 bindHover 会被上面的覆盖，用 setTimeout 确保
+    setTimeout(bindHover, 100);
+})();
+
+// =============================================
+//  6. 初始渲染（被上面覆盖了，但需要首次绑定）
+// =============================================
+// 由于上面 IIFE 中执行了 render('all')，OK
+
+// =============================================
+//  7. Lightbox
 // =============================================
 function openLB(idx) {
     currentIndex = idx;
@@ -593,93 +589,19 @@ function openLB(idx) {
     lb.classList.add('open');
     document.body.style.overflow = 'hidden';
 }
-
 function closeLB() { lb.classList.remove('open'); document.body.style.overflow = ''; }
 function prevP() { if (!filtered.length) return; currentIndex = (currentIndex - 1 + filtered.length) % filtered.length; syncLB(); }
 function nextP() { if (!filtered.length) return; currentIndex = (currentIndex + 1) % filtered.length; syncLB(); }
 function syncLB() { var p = filtered[currentIndex]; if (p) { lbImg.src = p.src; lbImg.alt = p.title; lbTitle.textContent = p.title + ' · ' + (TAG_LABEL[p.tag] || p.tag); lbCounter.textContent = (currentIndex + 1) + ' / ' + filtered.length; } }
 
 // =============================================
-//  5. 鼠标交互 — 3D 倾角 + 光泽跟随
-// =============================================
-// —— 全局光晕跟随鼠标 ——
-document.addEventListener('mousemove', function(e) {
-    var x = e.clientX, y = e.clientY;
-    glow.style.transform = 'translate(' + x + 'px, ' + y + 'px)';
-    // 光晕随鼠标缓动（因为是 fixed 定位，直接 translate 即可）
-});
-
-// —— 卡片 3D 倾角 + 光泽 ——
-function initTilt() {
-    var cards = document.querySelectorAll('.gallery-item');
-    cards.forEach(function(card) {
-        // 获取光泽层
-        var gloss = card.querySelector('.gloss');
-        if (!gloss) return;
-
-        card.addEventListener('mousemove', function(e) {
-            var rect = card.getBoundingClientRect();
-            // 鼠标相对于卡片的位置（0~1）
-            var x = (e.clientX - rect.left) / rect.width;
-            var y = (e.clientY - rect.top) / rect.height;
-            // 倾角范围 ±8°
-            var tiltX = (y - 0.5) * -16;
-            var tiltY = (x - 0.5) * 16;
-            // 应用 3D 变换
-            card.style.transform =
-                'perspective(800px) rotateX(' + tiltX + 'deg) rotateY(' + tiltY + 'deg) scale3d(1.02,1.02,1.02)';
-            // 光泽层: 径向渐变跟随鼠标
-            gloss.style.background =
-                'radial-gradient(circle at ' + (x * 100) + '% ' + (y * 100) + '%, rgba(255,255,255,0.2) 0%, transparent 60%)';
-        });
-
-        card.addEventListener('mouseleave', function() {
-            card.style.transform = 'perspective(800px) rotateX(0deg) rotateY(0deg) scale3d(1,1,1)';
-            // 用 transition 让卡片平滑复位
-            card.style.transition = 'transform 0.5s cubic-bezier(0.22,1,0.36,1)';
-            setTimeout(function() { card.style.transition = ''; }, 500);
-            if (gloss) gloss.style.background = '';
-        });
-    });
-}
-
-// —— 头部视差 ——
-var header = document.getElementById('header');
-var headerBg = header.querySelector('.header-bg');
-document.addEventListener('mousemove', function(e) {
-    var x = (e.clientX / window.innerWidth - 0.5) * 2;
-    var y = (e.clientY / window.innerHeight - 0.5) * 2;
-    headerBg.style.transform = 'translate(' + (x * -10) + 'px, ' + (y * -10) + 'px)';
-});
-
-// —— 筛选按钮磁性效果 ——
-filterBtns.forEach(function(btn) {
-    btn.addEventListener('mousemove', function(e) {
-        var rect = btn.getBoundingClientRect();
-        var x = e.clientX - rect.left - rect.width / 2;
-        var y = e.clientY - rect.top - rect.height / 2;
-        var dist = Math.sqrt(x * x + y * y);
-        var maxDist = Math.max(rect.width, rect.height);
-        var pull = Math.min(1, dist / maxDist);
-        var dx = x * 0.15 * (1 - pull);
-        var dy = y * 0.15 * (1 - pull);
-        btn.style.transform = 'translate(' + dx + 'px, ' + dy + 'px)';
-    });
-    btn.addEventListener('mouseleave', function() {
-        btn.style.transform = '';
-    });
-});
-
-// =============================================
-//  6. 事件绑定
+//  8. 事件绑定
 // =============================================
 filterBtns.forEach(function(btn) {
     btn.addEventListener('click', function() {
         filterBtns.forEach(function(b) { b.classList.remove('active'); });
         btn.classList.add('active');
         render(btn.getAttribute('data-filter'));
-        // 重新绑定 3D 倾角（因为 DOM 重建了）
-        initTilt();
     });
 });
 
@@ -694,13 +616,6 @@ document.addEventListener('keydown', function(e) {
     if (e.key === 'ArrowLeft') { e.preventDefault(); prevP(); return; }
     if (e.key === 'ArrowRight') { e.preventDefault(); nextP(); return; }
 });
-
-// =============================================
-//  7. 启动
-// =============================================
-render('all');
-// 等 DOM 渲染完成后再绑定倾角
-requestAnimationFrame(function() { initTilt(); });
 </script>
 
 </body>
