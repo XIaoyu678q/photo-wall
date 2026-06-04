@@ -77,6 +77,16 @@ img { display:block; width:100%; height:100%; object-fit:cover; pointer-events:n
     align-items:center;
     justify-content:center;
     padding:10px 40px;
+    /* 背景：中心暖光辐射 + 深蓝紫底色，避免纯黑 */
+    background:
+        radial-gradient(ellipse 600px 400px at 50% 45%, rgba(60,40,80,0.4) 0%, transparent 70%),
+        radial-gradient(ellipse 300px 300px at 30% 70%, rgba(80,50,60,0.2) 0%, transparent 60%),
+        radial-gradient(ellipse 200px 300px at 70% 30%, rgba(40,60,80,0.15) 0%, transparent 50%),
+        linear-gradient(175deg, #16111f 0%, #181520 30%, #14121c 60%, #0f0e16 100%);
+}
+/* 每页切换时背景平滑过渡 */
+.scroll-track .page + .page {
+    /* 背景自动继承 */
 }
 
 /* 页内照片网格 — 不塞满，有呼吸感 */
