@@ -5,9 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
 <title>📸 照片墙 · 流</title>
 <style>
-/* =============================================
-   照片墙 — 惯性拖拽 · 3D视差 · 高级动效
-   ============================================= */
 :root {
     --bg: #12121a;
     --surface: #1c1c26;
@@ -15,7 +12,7 @@
     --text: rgba(255,255,255,0.85);
     --text-light: rgba(255,255,255,0.5);
     --radius: 10px;
-    --gap: 14px;
+    --gap: 12px;
     --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -24,141 +21,104 @@ body {
     font-family: var(--font);
     background: var(--bg);
     color: var(--text);
-    height: 100vh;
-    overflow: hidden;
-    user-select: none;
-    -webkit-user-select: none;
+    height: 100vh; overflow: hidden;
+    user-select: none; -webkit-user-select: none;
 }
 img { display: block; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
 
 /* ===== 头部 ===== */
 .header {
-    position: relative; z-index: 10;
-    padding: 28px 32px 16px;
+    padding: 24px 32px 10px;
     display: flex; align-items: center; justify-content: space-between;
 }
-.header-left { display: flex; align-items: center; gap: 14px; }
-.header-icon { font-size: 1.6rem; }
-.site-title { font-size: 1.3rem; font-weight: 300; letter-spacing: 3px; color: var(--text); }
+.header-left { display: flex; align-items: center; gap: 12px; }
+.header-icon { font-size: 1.4rem; }
+.site-title { font-size: 1.2rem; font-weight: 300; letter-spacing: 3px; color: var(--text); }
 .site-title strong { font-weight: 600; letter-spacing: 1px; }
+.page-num { font-size: 0.75rem; color: var(--text-light); font-weight: 300; letter-spacing: 1px; }
 
 /* ===== 筛选栏 ===== */
-.filters {
-    padding: 0 32px 16px;
-    display: flex; gap: 8px;
-    position: relative; z-index: 10;
-}
+.filters { padding: 0 32px 12px; display: flex; gap: 8px; }
 .filter-btn {
     border: 1px solid rgba(255,255,255,0.1);
     background: rgba(255,255,255,0.04);
     color: var(--text-light);
-    padding: 5px 18px;
-    border-radius: 9999px;
-    font-size: 0.78rem;
-    font-weight: 400;
-    font-family: var(--font);
-    cursor: pointer;
-    letter-spacing: 0.3px;
+    padding: 4px 16px; border-radius: 9999px;
+    font-size: 0.75rem; font-weight: 400; font-family: var(--font);
+    cursor: pointer; letter-spacing: 0.3px;
     transition: background 0.3s, color 0.3s, border-color 0.3s, box-shadow 0.3s;
     backdrop-filter: blur(8px);
 }
 .filter-btn:hover { border-color: rgba(255,255,255,0.2); color: var(--text); }
 .filter-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: 0 4px 20px rgba(109,109,255,0.3); }
 
-/* ===== 照片墙主容器 ===== */
-/* 遮罩层：让鼠标移出舞台区时平滑复位 3D */
+/* ===== 主舞台 ===== */
 .viewport-mask {
-    position: relative;
-    z-index: 5;
-    height: calc(100vh - 120px);
+    position: relative; z-index: 5;
+    height: calc(100vh - 115px);
     overflow: hidden;
     perspective: 1000px;
     perspective-origin: 50% 40%;
 }
+.stage { transform-style: preserve-3d; will-change: transform; height: 100%; width: 100%; }
 
-/* 舞台：整体 3D 容器，由 JS 控制 rotateX/Y */
-.stage {
-    transform-style: preserve-3d;
-    will-change: transform;
-    height: 100%;
-    width: 100%;
-}
-
-/* 视口裁剪（隐藏滚动条） */
+/* ===== 横向滚动容器（带 snap） ===== */
 .scroll-viewport {
-    width: 100%;
-    height: 100%;
+    width: 100%; height: 100%;
     overflow: hidden;
-    position: relative;
     cursor: grab;
-    -webkit-overflow-scrolling: touch;
+    position: relative;
 }
 .scroll-viewport:active { cursor: grabbing; }
 
-/* 内部宽内容 — 横向 flex */
 .scroll-content {
     display: flex;
-    gap: var(--gap);
-    padding: 8px 32px 8px 32px;
     height: 100%;
     will-change: transform;
     transform-style: preserve-3d;
-    /* 拖拽时禁止换行 */
-    flex-wrap: nowrap;
+    /* 由 JS 控制 translateX */
 }
 
-/* ===== 每列 ===== */
-.photo-column {
-    display: flex;
-    flex-direction: column;
+/* ===== 每一页 ===== */
+.photo-page {
+    flex: 0 0 100%;
+    height: 100%;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
     gap: var(--gap);
-    flex-shrink: 0;
+    padding: 6px 32px 6px 32px;
     transform-style: preserve-3d;
-    will-change: transform;
 }
 
-/* ===== 照片卡片 ===== */
+/* 照片卡片 */
 .photo-card {
     position: relative;
     border-radius: var(--radius);
     overflow: hidden;
     cursor: pointer;
     background: var(--surface);
-    flex-shrink: 0;
     transform-style: preserve-3d;
     will-change: transform;
     transition: box-shadow 0.4s cubic-bezier(0.22,1,0.36,1);
     backface-visibility: hidden;
 }
-.photo-card .img-wrap {
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    border-radius: inherit;
-}
-.photo-card img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.6s cubic-bezier(0.22,1,0.36,1);
-    will-change: transform;
-}
+.photo-card .img-wrap { width: 100%; height: 100%; overflow: hidden; border-radius: inherit; }
+.photo-card img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s cubic-bezier(0.22,1,0.36,1); }
 .photo-card:hover img { transform: scale(1.08); }
 
-/* 卡片覆盖信息 */
+/* 覆盖层 */
 .photo-card .overlay {
     position: absolute; inset: 0; z-index: 2;
     background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.05) 45%, transparent 60%);
     display: flex; flex-direction: column; justify-content: flex-end;
-    padding: 22px 14px 12px;
-    opacity: 0;
-    transition: opacity 0.4s cubic-bezier(0.22,1,0.36,1);
+    padding: 20px 12px 10px;
+    opacity: 0; transition: opacity 0.4s cubic-bezier(0.22,1,0.36,1);
     pointer-events: none;
 }
 .photo-card:hover .overlay { opacity: 1; }
-.overlay .photo-title { color: #fff; font-size: 0.8rem; font-weight: 500; letter-spacing: 0.3px; transform: translateY(10px); transition: transform 0.4s cubic-bezier(0.22,1,0.36,1); }
+.overlay .photo-title { color: #fff; font-size: 0.75rem; font-weight: 500; letter-spacing: 0.3px; transform: translateY(10px); transition: transform 0.4s cubic-bezier(0.22,1,0.36,1); }
 .photo-card:hover .overlay .photo-title { transform: translateY(0); }
-.overlay .photo-tag { display: inline-block; font-size: 0.6rem; color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.1); backdrop-filter: blur(4px); padding: 2px 9px; border-radius: 9999px; margin-top: 4px; width: fit-content; transform: translateY(10px); transition: transform 0.4s cubic-bezier(0.22,1,0.36,1) 0.03s; }
+.overlay .photo-tag { display: inline-block; font-size: 0.55rem; color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.1); backdrop-filter: blur(4px); padding: 2px 8px; border-radius: 9999px; margin-top: 3px; width: fit-content; transform: translateY(10px); transition: transform 0.4s cubic-bezier(0.22,1,0.36,1) 0.03s; }
 .photo-card:hover .overlay .photo-tag { transform: translateY(0); }
 
 /* 骨架屏 */
@@ -171,13 +131,24 @@ img { display: block; width: 100%; height: 100%; object-fit: cover; pointer-even
 }
 @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
-/* ===== Lightbox ===== */
-.lightbox {
-    position: fixed; inset: 0; z-index: 999;
-    background: rgba(0,0,0,0.85); backdrop-filter: blur(30px);
-    display: flex; justify-content: center; align-items: center;
-    opacity: 0; pointer-events: none; transition: opacity 0.4s ease;
+/* ===== 底部页码 ===== */
+.page-bar {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 12px;
+    background: rgba(255,255,255,0.06);
+    backdrop-filter: blur(16px);
+    padding: 8px 18px;
+    border-radius: 9999px;
+    border: 1px solid rgba(255,255,255,0.06);
+    z-index: 20;
+    pointer-events: none;
 }
+.page-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.15); transition: background 0.3s, transform 0.3s; }
+.page-dot.active { background: var(--accent); transform: scale(1.4); box-shadow: 0 0 12px rgba(109,109,255,0.4); }
+.page-label { font-size: 0.7rem; color: var(--text-light); letter-spacing: 0.5px; }
+
+/* ===== Lightbox ===== */
+.lightbox { position: fixed; inset: 0; z-index: 999; background: rgba(0,0,0,0.85); backdrop-filter: blur(30px); display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.4s ease; }
 .lightbox.open { opacity: 1; pointer-events: auto; }
 .lightbox-inner { position: relative; max-width: 90vw; max-height: 90vh; display: flex; flex-direction: column; align-items: center; transform: scale(0.92); transition: transform 0.4s cubic-bezier(0.22,1,0.36,1); }
 .lightbox.open .lightbox-inner { transform: scale(1); }
@@ -191,25 +162,20 @@ img { display: block; width: 100%; height: 100%; object-fit: cover; pointer-even
 .lb-hint { position: absolute; bottom: -32px; color: rgba(255,255,255,0.1); font-size: 0.6rem; }
 
 /* ===== 响应式 ===== */
-@media (max-width: 1024px) {
-    .photo-column { width: 200px; }
-}
+@media (max-width: 1024px) { .photo-page { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 720px) {
-    .photo-column { width: 160px; }
-    .header { padding: 20px 18px 12px; }
-    .site-title { font-size: 1.1rem; }
-    .filters { padding: 0 18px 12px; gap: 6px; }
-    .filter-btn { padding: 4px 14px; font-size: 0.72rem; }
+    .photo-page { grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 6px 18px; }
+    .header { padding: 20px 18px 8px; }
+    .site-title { font-size: 1rem; }
+    .filters { padding: 0 18px 10px; gap: 6px; }
+    .filter-btn { padding: 3px 12px; font-size: 0.7rem; }
     .viewport-mask { height: calc(100vh - 100px); }
-    .scroll-content { padding: 6px 18px; gap: 10px; }
+    .page-bar { bottom: 16px; padding: 6px 14px; gap: 8px; }
     .lb-nav { font-size: 0.9rem; padding: 8px 6px; }
     .lb-prev { left: 4px; } .lb-next { right: 4px; }
     .lb-close { top: -36px; font-size: 1.5rem; }
 }
-@media (max-width: 440px) {
-    .photo-column { width: 130px; }
-    .gap { gap: 8px; }
-}
+@media (max-width: 440px) { .photo-page { grid-template-columns: repeat(2, 1fr); gap: 8px; } }
 </style>
 </head>
 <body>
@@ -220,6 +186,7 @@ img { display: block; width: 100%; height: 100%; object-fit: cover; pointer-even
         <span class="header-icon">📸</span>
         <h1 class="site-title"><strong>照片</strong>墙</h1>
     </div>
+    <span class="page-num" id="pageNumLabel">1 / 5</span>
 </header>
 
 <!-- ===== 筛选栏 ===== -->
@@ -238,6 +205,11 @@ img { display: block; width: 100%; height: 100%; object-fit: cover; pointer-even
             <div class="scroll-content" id="scrollContent"></div>
         </div>
     </div>
+</div>
+
+<!-- ===== 底部页码指示器 ===== -->
+<div class="page-bar" id="pageBar">
+    <div class="page-dots" id="pageDots"></div>
 </div>
 
 <!-- ===== Lightbox ===== -->
@@ -273,6 +245,8 @@ var viewport = document.getElementById('scrollViewport');
 var mask = document.getElementById('viewportMask');
 var stage = document.getElementById('stage');
 var filterBtns = document.querySelectorAll('.filter-btn');
+var pageDots = document.getElementById('pageDots');
+var pageNumLabel = document.getElementById('pageNumLabel');
 var lb = document.getElementById('lightbox');
 var lbImg = document.getElementById('lbImage');
 var lbTitle = document.getElementById('lbTitle');
@@ -283,70 +257,37 @@ var lbNext = document.getElementById('lbNext');
 
 var currentFilter = 'all';
 var currentLBIndex = 0;
+var PER_PAGE = 8;
 
 // =============================================
-//  3. 辅助：获取照片的虚拟比例
-//     让每张照片有不同的高度，形成错落感
-// =============================================
-var RATIOS = [0.66, 0.75, 1.0, 1.25, 1.5, 0.8, 1.33, 1.2, 0.9, 1.1];
-function getRatio(id) { return RATIOS[id % RATIOS.length]; }
-
-// =============================================
-//  4. 渲染照片墙（列式布局）
+//  3. 渲染：分页 + 每页照片网格
 // =============================================
 function render(filter) {
     filter = filter || 'all';
     currentFilter = filter;
-    var photos = filter === 'all' ? PHOTOS : PHOTOS.filter(function(p) { return p.tag === filter; });
-
+    var photos = filter === 'all' ? PHOTOS.slice() : PHOTOS.filter(function(p) { return p.tag === filter; });
     content.innerHTML = '';
 
-    // 计算列数：根据视口宽度和列宽
-    var cardW = window.innerWidth <= 440 ? 130 : (window.innerWidth <= 720 ? 160 : (window.innerWidth <= 1024 ? 200 : 220));
-    var gap = window.innerWidth <= 440 ? 8 : (window.innerWidth <= 720 ? 10 : 14);
-    var availH = viewport.clientHeight - 16;
-    var colH = availH; // 列高 = 容器高度
+    var totalPages = Math.max(1, Math.ceil(photos.length / PER_PAGE));
 
-    // 确定每列放多少张
-    // 目标：每张卡片高度 = cardW / ratio，总和不超过 colH
-    var columns = [];
-    var colIdx = 0;
+    for (var p = 0; p < totalPages; p++) {
+        var page = document.createElement('div');
+        page.className = 'photo-page';
 
-    photos.forEach(function(photo, globalIdx) {
-        var ratio = getRatio(photo.id);
-        var h = cardW / ratio;
+        var start = p * PER_PAGE;
+        var end = Math.min(start + PER_PAGE, photos.length);
 
-        // 如果当前列容不下，开新列
-        if (!columns[colIdx]) columns[colIdx] = { photos: [], totalH: 0 };
-
-        // 检查：当前列总高 + gap + 新卡片高 <= colH
-        var nextH = columns[colIdx].totalH + (columns[colIdx].photos.length > 0 ? gap : 0) + h;
-        if (nextH > colH && columns[colIdx].photos.length > 0) {
-            colIdx++;
-            if (!columns[colIdx]) columns[colIdx] = { photos: [], totalH: 0 };
-        }
-
-        columns[colIdx].photos.push({ photo: photo, height: h, globalIdx: globalIdx });
-        columns[colIdx].totalH += h + (columns[colIdx].photos.length > 1 ? gap : 0);
-    });
-
-    // 创建列 DOM
-    columns.forEach(function(col) {
-        var colDiv = document.createElement('div');
-        colDiv.className = 'photo-column';
-        colDiv.style.width = cardW + 'px';
-
-        col.photos.forEach(function(item) {
+        for (var idx = start; idx < end; idx++) {
+            var photo = photos[idx];
             var card = document.createElement('div');
             card.className = 'photo-card';
-            card.style.height = item.height + 'px';
 
             var wrap = document.createElement('div');
             wrap.className = 'img-wrap';
 
             var img = document.createElement('img');
-            img.src = item.photo.src;
-            img.alt = item.photo.title;
+            img.src = photo.src;
+            img.alt = photo.title;
             img.loading = 'lazy';
             img.draggable = false;
 
@@ -356,49 +297,51 @@ function render(filter) {
             var overlay = document.createElement('div');
             overlay.className = 'overlay';
             overlay.innerHTML =
-                '<div class="photo-title">' + esc(item.photo.title) + '</div>' +
-                '<span class="photo-tag">' + (TAG_LABEL[item.photo.tag] || item.photo.tag) + '</span>';
+                '<div class="photo-title">' + esc(photo.title) + '</div>' +
+                '<span class="photo-tag">' + (TAG_LABEL[photo.tag] || photo.tag) + '</span>';
             card.appendChild(overlay);
 
-            // 点击 -> Lightbox
-            card.addEventListener('click', function() {
-                openLB(item.globalIdx, photos);
-            });
+            // lightbox
+            card.addEventListener('click', (function(gi) { return function() { openLB(gi, photos); }; })(idx));
 
-            // 悬停：提升自身 + 调暗其他 (由事件委托统一处理)
-            // 直接在 card 上标记全局索引
-            card.dataset.idx = item.globalIdx;
+            // hover 暗化
+            page.appendChild(card);
+        }
 
-            colDiv.appendChild(card);
-        });
+        content.appendChild(page);
+    }
 
-        content.appendChild(colDiv);
-    });
+    // 绑定 hover
+    bindHover();
 
-    // 绑定 hover 效果（事件委托，性能更好）
-    bindHoverEffect();
+    // 页码指示
+    updatePageDots(totalPages);
+    pageNumLabel.textContent = '1 / ' + totalPages;
+    currentPage = 0;
+
+    // 复位滚动
+    tx = 0;
+    content.style.transform = 'translateX(0px) translateZ(0)';
+    pageWidth = viewport.clientWidth;
+    updateMaxScroll();
 }
 
 function esc(s) { var d = document.createElement('div'); d.appendChild(document.createTextNode(s)); return d.innerHTML; }
 
 // =============================================
-//  5. 悬停聚焦：浮起 + 暗化其他
+//  4. 悬停聚焦：浮起 + 暗化其他
 // =============================================
-function bindHoverEffect() {
+function bindHover() {
     var cards = content.querySelectorAll('.photo-card');
     cards.forEach(function(card) {
         card.addEventListener('mouseenter', function() {
-            cards.forEach(function(c) {
-                if (c !== card) c.style.filter = 'brightness(0.45) saturate(0.6)';
-            });
+            cards.forEach(function(c) { if (c !== card) c.style.filter = 'brightness(0.4) saturate(0.5)'; });
             card.style.zIndex = '10';
-            card.style.transform = 'scale(1.04)';
+            card.style.transform = 'scale(1.05)';
             card.style.boxShadow = '0 20px 60px rgba(0,0,0,0.5)';
         });
         card.addEventListener('mouseleave', function() {
-            cards.forEach(function(c) {
-                c.style.filter = '';
-            });
+            cards.forEach(function(c) { c.style.filter = ''; });
             card.style.zIndex = '';
             card.style.transform = '';
             card.style.boxShadow = '';
@@ -407,237 +350,234 @@ function bindHoverEffect() {
 }
 
 // =============================================
-//  6. 惯性拖拽系统
+//  5. 页码指示器
 // =============================================
-(function() {
-    // ---- 状态 ----
-    var isDragging = false;
-    var startX = 0;
-    var startY = 0;
-    var scrollLeft = 0;
-    var scrollTop = 0;
-    var velocityX = 0;
-    var lastX = 0;
-    var lastTime = 0;
-    var animId = null;
-    var isAnimating = false;
-
-    // 摩擦力（0 ~ 1，越小停得越快）
-    var FRICTION = 0.92;
-
-    // content 的当前 translateX（正向 = 右移）
-    var tx = 0;
-    var maxTx = 0;
-
-    // 更新最大可滚动距离
-    function updateMaxScroll() {
-        var cw = content.scrollWidth;
-        var vw = viewport.clientWidth;
-        maxTx = Math.max(0, cw - vw);
+function updatePageDots(total) {
+    pageDots.innerHTML = '';
+    for (var i = 0; i < total; i++) {
+        var dot = document.createElement('span');
+        dot.className = 'page-dot' + (i === 0 ? ' active' : '');
+        pageDots.appendChild(dot);
     }
+}
 
-    // ---- 设置变换（含 clamp） ----
-    function setTranslate(x) {
-        tx = Math.min(0, Math.max(-maxTx, x));
-        content.style.transform = 'translateX(' + tx + 'px) translateZ(0)';
-    }
+function setActivePage(n) {
+    var dots = pageDots.querySelectorAll('.page-dot');
+    dots.forEach(function(d, i) { d.classList.toggle('active', i === n); });
+    var total = dots.length;
+    pageNumLabel.textContent = (n + 1) + ' / ' + total;
+    currentPage = n;
+}
 
-    // ---- 惯性动画循环 ----
-    function momentumLoop() {
-        if (Math.abs(velocityX) < 0.5) {
-            isAnimating = false;
-            animId = null;
-            return;
+// =============================================
+//  6. 拖拽 + 惯性 + Snap
+// =============================================
+var isDragging = false;
+var startX = 0;
+var scrollStartTX = 0;
+var velX = 0;
+var lastX = 0;
+var lastTime = 0;
+var aid = null;
+var isAnimating = false;
+var tx = 0;
+var pageWidth = viewport.clientWidth;
+var maxTx = 0;
+var currentPage = 0;
+var totalPages = 1;
+
+var FRICTION = 0.91;
+var SNAP_THRESHOLD = 0.3; // 超过 30% 宽度触发翻页
+
+function updateMaxScroll() {
+    pageWidth = viewport.clientWidth;
+    var total = content.children.length;
+    totalPages = Math.max(1, total);
+    maxTx = (totalPages - 1) * pageWidth;
+}
+
+function clampTx(x) { return Math.max(-maxTx, Math.min(0, x)); }
+
+function applyTx(x, snap) {
+    tx = clampTx(x);
+    content.style.transform = 'translateX(' + tx + 'px) translateZ(0)';
+    if (snap !== false) updatePageFromTx();
+}
+
+function updatePageFromTx() {
+    if (pageWidth <= 0) return;
+    var raw = -tx / pageWidth;
+    var n = Math.round(raw);
+    n = Math.max(0, Math.min(totalPages - 1, n));
+    setActivePage(n);
+}
+
+function snapToPage(n, animate) {
+    n = Math.max(0, Math.min(totalPages - 1, n));
+    var target = -n * pageWidth;
+    if (animate) {
+        // 动画过渡
+        var start = tx;
+        var diff = target - start;
+        var duration = 300;
+        var t0 = performance.now();
+        function animSnap(now) {
+            var p = Math.min(1, (now - t0) / duration);
+            var ease = 1 - Math.pow(1 - p, 3); // easeOutCubic
+            applyTx(start + diff * ease, false);
+            if (p < 1) requestAnimationFrame(animSnap);
+            else { applyTx(target, true); setActivePage(n); }
         }
-        velocityX *= FRICTION;
-        setTranslate(tx + velocityX);
-        animId = requestAnimationFrame(momentumLoop);
+        requestAnimationFrame(animSnap);
+    } else {
+        applyTx(target);
+        setActivePage(n);
     }
+}
 
-    // 启动惯性
-    function startMomentum(v) {
-        velocityX = v;
-        if (!isAnimating && Math.abs(velocityX) >= 0.5) {
-            isAnimating = true;
-            if (animId) cancelAnimationFrame(animId);
-            animId = requestAnimationFrame(momentumLoop);
-        }
+// ---- 指针事件 ----
+function onDown(e) {
+    isDragging = true;
+    isAnimating = false;
+    if (aid) { cancelAnimationFrame(aid); aid = null; }
+    velX = 0;
+    var pt = e.touches ? e.touches[0] : e;
+    startX = pt.clientX;
+    lastX = pt.clientX;
+    lastTime = Date.now();
+    scrollStartTX = tx;
+    updateMaxScroll();
+}
+
+function onMove(e) {
+    if (!isDragging) return;
+    e.preventDefault();
+    var pt = e.touches ? e.touches[0] : e;
+    var dx = pt.clientX - startX;
+    var now = Date.now();
+    var dt = now - lastTime;
+    if (dt > 0) { velX = (pt.clientX - lastX) / dt * 16; velX = Math.max(-40, Math.min(40, velX)); }
+    lastX = pt.clientX;
+    lastTime = now;
+    applyTx(scrollStartTX + dx);
+}
+
+function onUp(e) {
+    if (!isDragging) return;
+    isDragging = false;
+    // 判断是否应该翻页
+    var pageOffset = -tx / pageWidth;
+    var frac = pageOffset - Math.floor(pageOffset);
+    var pageIndex = Math.round(pageOffset);
+
+    // 如果速度够大或偏移够大，触发翻页
+    if (Math.abs(velX) > 8) {
+        var dir = velX > 0 ? -1 : 1;
+        snapToPage(currentPage + dir, true);
+    } else if (Math.abs(frac - 0.5) > SNAP_THRESHOLD) {
+        snapToPage(pageIndex, true);
+    } else {
+        snapToPage(currentPage, true);
     }
+}
 
-    // ---- 鼠标/指针事件 ----
-    function onPointerDown(e) {
-        // 如果点在卡片上（非拖拽，是点击），允许点击
-        // 但要区分点击和拖拽
-        isDragging = true;
-        isAnimating = false;
-        if (animId) { cancelAnimationFrame(animId); animId = null; }
-        velocityX = 0;
-
-        var point = e.touches ? e.touches[0] : e;
-        startX = point.clientX;
-        startY = point.clientY;
-        lastX = point.clientX;
-        lastTime = Date.now();
-        scrollLeft = tx;
-        updateMaxScroll();
+// ---- 滚轮 ----
+function onWheel(e) {
+    e.preventDefault();
+    var delta = e.deltaY || 0;
+    updateMaxScroll();
+    var move = delta * 0.6;
+    applyTx(tx + move);
+    // 惯性
+    velX = delta * 0.04;
+    velX = Math.max(-15, Math.min(15, velX));
+    if (Math.abs(velX) > 2) {
+        (function(v) {
+            function loop() {
+                v *= 0.88;
+                if (Math.abs(v) < 0.5) { updatePageFromTx(); return; }
+                applyTx(tx + v);
+                requestAnimationFrame(loop);
+            }
+            requestAnimationFrame(loop);
+        })(velX);
+    } else {
+        updatePageFromTx();
     }
+}
 
-    function onPointerMove(e) {
-        if (!isDragging) return;
-        e.preventDefault();
+// ---- 键盘左右翻页 ----
+function onKey(e) {
+    if (lb.classList.contains('open')) return;
+    if (e.key === 'ArrowLeft') { e.preventDefault(); snapToPage(currentPage - 1, true); }
+    if (e.key === 'ArrowRight') { e.preventDefault(); snapToPage(currentPage + 1, true); }
+}
 
-        var point = e.touches ? e.touches[0] : e;
-        var dx = point.clientX - startX;
-        var now = Date.now();
+// ---- 窗口 resize ----
+function onResize() {
+    updateMaxScroll();
+    // 保持当前页
+    snapToPage(currentPage, false);
+}
 
-        // 计算速度（用于惯性）
-        var dt = now - lastTime;
-        if (dt > 0) {
-            velocityX = (point.clientX - lastX) / dt * 16; // 归一化到 ~16ms 帧
-            // 限制速度范围
-            velocityX = Math.max(-50, Math.min(50, velocityX));
-        }
-        lastX = point.clientX;
-        lastTime = now;
+// ---- 绑定 ----
+viewport.addEventListener('mousedown', onDown);
+window.addEventListener('mousemove', onMove);
+window.addEventListener('mouseup', onUp);
 
-        setTranslate(scrollLeft + dx);
-    }
+viewport.addEventListener('touchstart', onDown, { passive: true });
+window.addEventListener('touchmove', onMove, { passive: false });
+window.addEventListener('touchend', onUp);
 
-    function onPointerUp(e) {
-        if (!isDragging) return;
-        isDragging = false;
-        // 启动惯性
-        startMomentum(velocityX);
-    }
-
-    // ---- 滚轮事件 ----
-    function onWheel(e) {
-        e.preventDefault();
-        var delta = e.deltaX || e.deltaY || 0;
-        // 鼠标滚轮映射：向下滚动 = 向左滑（内容右移），但感觉更自然的是向下 = 右滑
-        // 这里用向下 = 左移（内容右移为正）
-        updateMaxScroll();
-        var move = delta * 1.2;
-        setTranslate(tx + move);
-
-        // 给滚轮也加一点惯性（小动量）
-        var v = -delta * 0.08;
-        v = Math.max(-30, Math.min(30, v));
-        startMomentum(v);
-    }
-
-    // ---- 窗口 resize ----
-    function onResize() {
-        updateMaxScroll();
-        // clamp
-        if (tx < -maxTx) setTranslate(-maxTx);
-        if (tx > 0) setTranslate(0);
-    }
-
-    // ---- 绑定 ----
-    viewport.addEventListener('mousedown', onPointerDown);
-    window.addEventListener('mousemove', onPointerMove);
-    window.addEventListener('mouseup', onPointerUp);
-
-    viewport.addEventListener('touchstart', onPointerDown, { passive: true });
-    window.addEventListener('touchmove', onPointerMove, { passive: false });
-    window.addEventListener('touchend', onPointerUp);
-
-    viewport.addEventListener('wheel', onWheel, { passive: false });
-
-    window.addEventListener('resize', onResize);
-
-    // 公开方法供 render 后调用
-    window.__scrollSystem = {
-        updateMaxScroll: updateMaxScroll,
-        setTranslate: setTranslate,
-        onResize: onResize
-    };
-
-    // 初始更新
-    setTimeout(updateMaxScroll, 100);
-})();
+viewport.addEventListener('wheel', onWheel, { passive: false });
+document.addEventListener('keydown', onKey);
+window.addEventListener('resize', onResize);
 
 // =============================================
 //  7. 3D 鼠标视差（阻尼跟随）
 // =============================================
 (function() {
-    var targetRX = 0, targetRY = 0;
-    var currentRX = 0, currentRY = 0;
-    var aid = null;
-    var isMobile = window.innerWidth <= 720;
-
-    function onMove(e) {
-        if (isMobile) return;
-        var rect = mask.getBoundingClientRect();
-        var cx = rect.left + rect.width / 2;
-        var cy = rect.top + rect.height / 2;
-        var nx = (e.clientX - cx) / (rect.width / 2);
-        var ny = (e.clientY - cy) / (rect.height / 2);
-        nx = Math.max(-1, Math.min(1, nx));
-        ny = Math.max(-1, Math.min(1, ny));
-
-        // 平方映射让中心区更平坦
-        var sx = nx * Math.abs(nx);
-        var sy = ny * Math.abs(ny);
-
-        targetRY = sx * 4;   // ±4°
-        targetRX = sy * -3;  // ±3°
-
-        if (!aid) aid = requestAnimationFrame(tick);
+    var tRX = 0, tRY = 0, cRX = 0, cRY = 0, aid2 = null;
+    var mob = window.innerWidth <= 720;
+    function onMove(e) { if (mob) return;
+        var r = mask.getBoundingClientRect();
+        var nx = Math.max(-1, Math.min(1, (e.clientX - r.left - r.width/2)/(r.width/2)));
+        var ny = Math.max(-1, Math.min(1, (e.clientY - r.top - r.height/2)/(r.height/2)));
+        tRY = nx*Math.abs(nx)*3; tRX = ny*Math.abs(ny)*-2.5;
+        if (!aid2) aid2 = requestAnimationFrame(tick);
     }
-
-    function tick() {
-        var lerp = 0.08;
-        currentRX += (targetRX - currentRX) * lerp;
-        currentRY += (targetRY - currentRY) * lerp;
-
-        stage.style.transform =
-            'rotateX(' + currentRX + 'deg) rotateY(' + currentRY + 'deg)';
-
-        if (Math.abs(targetRX - currentRX) > 0.01 || Math.abs(targetRY - currentRY) > 0.01) {
-            aid = requestAnimationFrame(tick);
-        } else {
-            currentRX = targetRX;
-            currentRY = targetRY;
-            stage.style.transform = 'rotateX(' + currentRX + 'deg) rotateY(' + currentRY + 'deg)';
-            aid = null;
-        }
+    function tick() { var l=0.08; cRX+=(tRX-cRX)*l; cRY+=(tRY-cRY)*l;
+        stage.style.transform='rotateX('+cRX+'deg) rotateY('+cRY+'deg)';
+        if (Math.abs(tRX-cRX)>0.01||Math.abs(tRY-cRY)>0.01) aid2=requestAnimationFrame(tick);
+        else { cRX=tRX;cRY=tRY;stage.style.transform='rotateX('+cRX+'deg) rotateY('+cRY+'deg)';aid2=null; }
     }
-
-    function onLeave() { targetRX = 0; targetRY = 0; if (!aid) aid = requestAnimationFrame(tick); }
-
-    function onResize() { isMobile = window.innerWidth <= 720; }
-
+    function onLeave() { tRX=0;tRY=0;if(!aid2)aid2=requestAnimationFrame(tick); }
+    function onResize2() { mob = window.innerWidth <= 720; }
     mask.addEventListener('mousemove', onMove);
     mask.addEventListener('mouseleave', onLeave);
-    window.addEventListener('resize', onResize);
+    window.addEventListener('resize', onResize2);
 })();
 
 // =============================================
 //  8. Lightbox
 // =============================================
-var allPhotos = []; // 当前筛选后的照片列表
+var allPhotos = [];
 
 function openLB(idx, photosArr) {
     allPhotos = photosArr || PHOTOS;
     currentLBIndex = idx;
-    var p = allPhotos[idx];
-    if (!p) return;
-    lbImg.src = p.src;
-    lbImg.alt = p.title;
+    var p = allPhotos[idx]; if (!p) return;
+    lbImg.src = p.src; lbImg.alt = p.title;
     lbTitle.textContent = p.title + ' · ' + (TAG_LABEL[p.tag] || p.tag);
     lbCounter.textContent = (idx + 1) + ' / ' + allPhotos.length;
     lb.classList.add('open');
     document.body.style.overflow = 'hidden';
 }
-
 function closeLB() { lb.classList.remove('open'); document.body.style.overflow = ''; }
 function prevLB() { if (allPhotos.length) { currentLBIndex = (currentLBIndex - 1 + allPhotos.length) % allPhotos.length; syncLB(); } }
 function nextLB() { if (allPhotos.length) { currentLBIndex = (currentLBIndex + 1) % allPhotos.length; syncLB(); } }
 function syncLB() { var p = allPhotos[currentLBIndex]; if (p) { lbImg.src=p.src; lbImg.alt=p.title; lbTitle.textContent=p.title+' · '+(TAG_LABEL[p.tag]||p.tag); lbCounter.textContent=(currentLBIndex+1)+' / '+allPhotos.length; } }
 
-// Lightbox 事件
 lbClose.addEventListener('click', closeLB);
 lb.addEventListener('click', function(e) { if (e.target === lb) closeLB(); });
 lbPrev.addEventListener('click', function(e) { e.stopPropagation(); prevLB(); });
@@ -656,18 +596,8 @@ filterBtns.forEach(function(btn) {
     btn.addEventListener('click', function() {
         filterBtns.forEach(function(b) { b.classList.remove('active'); });
         btn.classList.add('active');
-
-        // 清空惯性
-        if (window.__scrollSystem) {
-            window.__scrollSystem.setTranslate(0);
-        }
-
         render(btn.getAttribute('data-filter'));
-
-        // 重新计算滚动
-        setTimeout(function() {
-            if (window.__scrollSystem) window.__scrollSystem.updateMaxScroll();
-        }, 50);
+        setTimeout(updateMaxScroll, 50);
     });
 });
 
@@ -675,9 +605,7 @@ filterBtns.forEach(function(btn) {
 //  10. 启动
 // =============================================
 render('all');
-setTimeout(function() {
-    if (window.__scrollSystem) window.__scrollSystem.updateMaxScroll();
-}, 100);
+setTimeout(updateMaxScroll, 100);
 </script>
 </body>
 </html>
