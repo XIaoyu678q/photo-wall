@@ -5,10 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>📸 照片墙 · 视界</title>
 <style>
-/* =============================================
-   照片墙 — 3D 视差 · 深度错落 · 鼠标滑移
-   ============================================= */
-
 :root {
     --bg: #f0f0f4;
     --surface: #ffffff;
@@ -20,263 +16,189 @@
     --gap: 18px;
     --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif;
 }
-
 * { margin: 0; padding: 0; box-sizing: border-box; }
-
 html { -webkit-font-smoothing: antialiased; }
-
-body {
-    font-family: var(--font);
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    overflow-x: hidden;
-}
-
+body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
 img { display: block; max-width: 100%; }
 
-/* ================================
-   头部 — 毛玻璃暗色
-   ================================ */
-.header {
-    position: relative; isolation: isolate;
-    padding: 80px 20px 60px; text-align: center; overflow: hidden;
-}
-.header-bg {
-    position: absolute; inset: -40px; z-index: -2;
-    background: radial-gradient(ellipse 70% 50% at 50% 20%, #2d2a5e 0%, transparent 70%),
-                radial-gradient(ellipse 50% 40% at 80% 80%, #1e1b4b 0%, transparent 60%),
-                linear-gradient(145deg, #0f0c29, #1a1a3e 45%, #242250);
-}
-.header-icon { font-size: 2.8rem; display: block; margin-bottom: 10px; }
-.site-title { font-size: 3.2rem; font-weight: 200; letter-spacing: 8px; color: rgba(255,255,255,0.92); }
+/* ===== 头部 ===== */
+.header { position: relative; isolation: isolate; padding: 70px 20px 50px; text-align: center; overflow: hidden; }
+.header-bg { position: absolute; inset: -40px; z-index: -2; background: radial-gradient(ellipse 70% 50% at 50% 20%, #2d2a5e 0%, transparent 70%), radial-gradient(ellipse 50% 40% at 80% 80%, #1e1b4b 0%, transparent 60%), linear-gradient(145deg, #0f0c29, #1a1a3e 45%, #242250); }
+.header-icon { font-size: 2.6rem; display: block; margin-bottom: 8px; }
+.site-title { font-size: 3rem; font-weight: 200; letter-spacing: 8px; color: rgba(255,255,255,0.92); }
 .site-title strong { font-weight: 600; letter-spacing: 2px; }
 .site-desc { font-size: 1rem; font-weight: 300; letter-spacing: 5px; color: rgba(255,255,255,0.4); margin-top: 6px; }
 
-/* ================================
-   筛选栏
-   ================================ */
-.filters {
-    padding: 18px 0 14px; text-align: center;
-    background: rgba(255,255,255,0.7); backdrop-filter: blur(16px);
-    position: sticky; top: 0; z-index: 50;
-    border-bottom: 1px solid rgba(0,0,0,0.04);
-}
-.filter-btn {
-    display: inline-block; border: 1.5px solid #e5e7eb; background: transparent;
-    color: var(--text-light); padding: 6px 20px; margin: 3px 4px;
-    border-radius: 9999px; font-size: 0.85rem; font-weight: 500;
-    font-family: var(--font); letter-spacing: 0.3px; cursor: pointer;
-    transition: background 0.25s, color 0.25s, border-color 0.25s, box-shadow 0.25s;
-    user-select: none;
-}
+/* ===== 筛选栏 ===== */
+.filters { padding: 16px 0 12px; text-align: center; background: rgba(255,255,255,0.7); backdrop-filter: blur(16px); position: sticky; top: 0; z-index: 50; border-bottom: 1px solid rgba(0,0,0,0.04); }
+.filter-btn { display: inline-block; border: 1.5px solid #e5e7eb; background: transparent; color: var(--text-light); padding: 6px 20px; margin: 3px 4px; border-radius: 9999px; font-size: 0.85rem; font-weight: 500; font-family: var(--font); cursor: pointer; transition: background 0.25s, color 0.25s, border-color 0.25s, box-shadow 0.25s; user-select: none; }
 .filter-btn:hover { border-color: var(--accent); color: var(--accent); }
 .filter-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: 0 4px 16px rgba(79,70,229,0.35); }
 
-/* ================================
-   3D 视差场景容器
-   ================================ */
-.scene {
-    perspective: 1200px;
-    perspective-origin: 50% 50%;
-    padding: 8px 0 40px;
-    overflow: visible;
+/* ===== 3D 场景容器 ===== */
+.scene { perspective: 1200px; perspective-origin: 50% 50%; padding: 0; overflow: visible; position: relative; }
+.scene__stage { transform-style: preserve-3d; will-change: transform; transition: transform 0.08s cubic-bezier(0.22,1,0.36,1); max-width: 1340px; margin: 0 auto; padding: 0 16px; }
+
+/* ===== 分页容器 ===== */
+.paginator {
+    position: relative;
+    overflow: hidden;
+    margin: 12px 0 0;
+    border-radius: var(--radius);
 }
 
-/* 场景内的观察者包装 — 响应鼠标位置旋转 */
-.scene__stage {
-    transform-style: preserve-3d;
+/* 滑动轨道 — 横向放置所有页面 */
+.paginator__track {
+    display: flex;
+    transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
     will-change: transform;
-    transition: transform 0.08s cubic-bezier(0.22, 1, 0.36, 1);
-    max-width: 1340px;
-    margin: 0 auto;
-    padding: 0 16px;
 }
 
-/* ================================
-   照片网格 — 4列
-   ================================ */
+/* 每一页 = 一个网格 */
+.paginator__page {
+    flex: 0 0 100%;
+    min-width: 0;
+}
+
 .gallery-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: var(--gap);
+    padding: 6px 0 10px;
     transform-style: preserve-3d;
 }
 
-/* ---------- 每张卡片 ---------- */
-.gallery-item {
-    position: relative;
-    border-radius: var(--radius);
-    overflow: hidden;
-    cursor: pointer;
-    background: var(--surface);
-    transform-style: preserve-3d;
-    /* 每个卡片由 JS 赋予不同的 translateZ 实现深度错落 */
-    will-change: transform;
-    transition: box-shadow 0.5s cubic-bezier(0.22, 1, 0.36, 1),
-                transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
-    animation: cardIn 0.5s ease both;
-}
-
-/* ---------- 图片容器 ---------- */
-.gallery-item .img-wrapper {
-    position: relative; overflow: hidden; line-height: 0; border-radius: inherit;
-}
-
-.gallery-item img {
-    width: 100%; height: auto; display: block;
-    transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
-    backface-visibility: hidden;
-}
+/* ===== 照片卡片 ===== */
+.gallery-item { position: relative; border-radius: var(--radius); overflow: hidden; cursor: pointer; background: var(--surface); transform-style: preserve-3d; will-change: transform; transition: box-shadow 0.5s cubic-bezier(0.22,1,0.36,1), transform 0.5s cubic-bezier(0.22,1,0.36,1); animation: cardIn 0.5s ease both; }
+.gallery-item .img-wrapper { position: relative; overflow: hidden; line-height: 0; border-radius: inherit; }
+.gallery-item img { width: 100%; height: auto; display: block; transition: transform 0.7s cubic-bezier(0.22,1,0.36,1); backface-visibility: hidden; }
 .gallery-item:hover img { transform: scale(1.12); }
 
-/* ---------- 骨架屏 ---------- */
-.skeleton {
-    background: #e8e8ec;
-    animation: shimmer 1.6s ease-in-out infinite;
-    background-image: linear-gradient(90deg, #e8e8ec 0%, #f2f2f6 40%, #e8e8ec 80%);
-    background-size: 200% 100%;
-}
-.skel-h { aspect-ratio: 3/2; }
-.skel-v { aspect-ratio: 2/3; }
-.skel-sq { aspect-ratio: 1/1; }
-.skel-w { aspect-ratio: 16/9; }
+/* 骨架屏 */
+.skeleton { background: #e8e8ec; animation: shimmer 1.6s ease-in-out infinite; background-image: linear-gradient(90deg,#e8e8ec 0%,#f2f2f6 40%,#e8e8ec 80%); background-size: 200% 100%; }
+.skel-h { aspect-ratio: 3/2; } .skel-v { aspect-ratio: 2/3; } .skel-sq { aspect-ratio: 1/1; } .skel-w { aspect-ratio: 16/9; }
 .img-wrapper.loaded .skeleton { display: none; }
 
-/* ---------- 信息覆盖层 ---------- */
-.gallery-item .overlay {
-    position: absolute; inset: 0; z-index: 2;
-    background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.1) 40%, transparent 60%);
-    display: flex; flex-direction: column; justify-content: flex-end;
-    padding: 28px 16px 16px;
-    opacity: 0;
-    transition: opacity 0.4s cubic-bezier(0.22, 1, 0.36, 1);
-}
+/* 悬浮覆盖层 */
+.gallery-item .overlay { position: absolute; inset: 0; z-index: 2; background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.1) 40%, transparent 60%); display: flex; flex-direction: column; justify-content: flex-end; padding: 28px 16px 16px; opacity: 0; transition: opacity 0.4s cubic-bezier(0.22,1,0.36,1); }
 .gallery-item:hover .overlay { opacity: 1; }
-
-.overlay .photo-title {
-    color: #fff; font-size: 0.9rem; font-weight: 500; letter-spacing: 0.3px;
-    transform: translateY(12px); transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
-}
+.overlay .photo-title { color: #fff; font-size: 0.9rem; font-weight: 500; letter-spacing: 0.3px; transform: translateY(12px); transition: transform 0.4s cubic-bezier(0.22,1,0.36,1); }
 .gallery-item:hover .photo-title { transform: translateY(0); }
-
-.overlay .photo-tag {
-    display: inline-block; font-size: 0.65rem; color: rgba(255,255,255,0.6);
-    background: rgba(255,255,255,0.12); backdrop-filter: blur(4px);
-    padding: 2px 10px; border-radius: 9999px; margin-top: 5px; width: fit-content;
-    transform: translateY(12px); transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1) 0.03s;
-}
+.overlay .photo-tag { display: inline-block; font-size: 0.65rem; color: rgba(255,255,255,0.6); background: rgba(255,255,255,0.12); backdrop-filter: blur(4px); padding: 2px 10px; border-radius: 9999px; margin-top: 5px; width: fit-content; transform: translateY(12px); transition: transform 0.4s cubic-bezier(0.22,1,0.36,1) 0.03s; }
 .gallery-item:hover .photo-tag { transform: translateY(0); }
+.overlay .view-hint { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(0.85); color: #fff; font-size: 0.8rem; letter-spacing: 1px; background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.15); padding: 9px 20px; border-radius: 9999px; opacity: 0; transition: opacity 0.35s ease,transform 0.35s ease; pointer-events: none; }
+.gallery-item:hover .view-hint { opacity: 1; transform: translate(-50%,-50%) scale(1); }
 
-.overlay .view-hint {
-    position: absolute; top: 50%; left: 50%;
-    transform: translate(-50%, -50%) scale(0.85);
-    color: #fff; font-size: 0.8rem; letter-spacing: 1px;
-    background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,0.15);
-    padding: 9px 20px; border-radius: 9999px;
-    opacity: 0; transition: opacity 0.35s ease, transform 0.35s ease;
-    pointer-events: none;
-}
-.gallery-item:hover .view-hint { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-
-/* ---------- 卡片悬浮提升 — 由 JS 控制增强 ---------- */
-.gallery-item.lifted {
-    z-index: 10;
+/* ===== 翻页控件 ===== */
+.pagination-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    padding: 16px 0 30px;
 }
 
-/* ================================
-   Lightbox
-   ================================ */
-.lightbox {
-    position: fixed; inset: 0; z-index: 999;
-    background: rgba(0,0,0,0.78); backdrop-filter: blur(24px);
-    display: flex; justify-content: center; align-items: center;
-    opacity: 0; pointer-events: none; transition: opacity 0.4s ease;
-}
-.lightbox.open { opacity: 1; pointer-events: auto; }
-
-.lightbox-inner {
-    position: relative; max-width: 88vw; max-height: 88vh;
-    display: flex; flex-direction: column; align-items: center;
-    transform: scale(0.92); transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
-}
-.lightbox.open .lightbox-inner { transform: scale(1); }
-
-.lightbox-inner img {
-    max-width: 100%; max-height: 78vh; border-radius: var(--radius);
-    box-shadow: 0 25px 80px rgba(0,0,0,0.5); object-fit: contain;
+/* 箭头按钮 */
+.page-arrow {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    border: 1.5px solid #e0e0e4;
+    background: var(--surface);
+    color: var(--text-light);
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.25s, border-color 0.25s, color 0.25s, box-shadow 0.25s, transform 0.25s;
+    font-family: var(--font);
     user-select: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.page-arrow:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: 0 4px 16px rgba(79,70,229,0.15);
+    transform: scale(1.05);
+}
+.page-arrow:active {
+    transform: scale(0.95);
+}
+.page-arrow:disabled {
+    opacity: 0.25;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
 }
 
-.lightbox-info {
-    display: flex; justify-content: space-between; align-items: center;
-    width: 100%; padding: 14px 4px 0;
-    color: rgba(255,255,255,0.7); font-size: 0.85rem;
+/* 页码指示 */
+.page-indicator {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-light);
+    letter-spacing: 0.5px;
+    min-width: 70px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
 }
+
+/* 页数圆点 */
+.page-dots {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+.page-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #d4d4d8;
+    transition: background 0.3s, transform 0.3s;
+    cursor: pointer;
+}
+.page-dot.active {
+    background: var(--accent);
+    transform: scale(1.3);
+}
+
+/* ===== Lightbox ===== */
+.lightbox { position: fixed; inset: 0; z-index: 999; background: rgba(0,0,0,0.78); backdrop-filter: blur(24px); display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.4s ease; }
+.lightbox.open { opacity: 1; pointer-events: auto; }
+.lightbox-inner { position: relative; max-width: 88vw; max-height: 88vh; display: flex; flex-direction: column; align-items: center; transform: scale(0.92); transition: transform 0.4s cubic-bezier(0.22,1,0.36,1); }
+.lightbox.open .lightbox-inner { transform: scale(1); }
+.lightbox-inner img { max-width: 100%; max-height: 78vh; border-radius: var(--radius); box-shadow: 0 25px 80px rgba(0,0,0,0.5); object-fit: contain; user-select: none; }
+.lightbox-info { display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 14px 4px 0; color: rgba(255,255,255,0.7); font-size: 0.85rem; }
 .lb-counter { font-size: 0.8rem; color: rgba(255,255,255,0.4); }
-
-.lb-close {
-    position: absolute; top: -46px; right: -6px;
-    color: rgba(255,255,255,0.5); font-size: 2.2rem; line-height: 1;
-    cursor: pointer; background: none; border: none; font-family: var(--font);
-    transition: color 0.25s, transform 0.25s;
-}
+.lb-close { position: absolute; top: -46px; right: -6px; color: rgba(255,255,255,0.5); font-size: 2.2rem; line-height: 1; cursor: pointer; background: none; border: none; font-family: var(--font); transition: color 0.25s, transform 0.25s; }
 .lb-close:hover { color: #fff; transform: rotate(90deg) scale(1.1); }
-
-.lb-nav {
-    position: absolute; top: 50%; transform: translateY(-50%);
-    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.06);
-    color: rgba(255,255,255,0.5); font-size: 1.3rem;
-    padding: 14px 10px; cursor: pointer; border-radius: 8px; line-height: 1;
-    transition: background 0.25s, color 0.25s; font-family: var(--font);
-}
+.lb-nav { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.06); color: rgba(255,255,255,0.5); font-size: 1.3rem; padding: 14px 10px; cursor: pointer; border-radius: 8px; line-height: 1; transition: background 0.25s, color 0.25s; font-family: var(--font); }
 .lb-nav:hover { background: rgba(255,255,255,0.12); color: #fff; }
 .lb-prev { left: -56px; } .lb-next { right: -56px; }
 .lb-hint { position: absolute; bottom: -34px; color: rgba(255,255,255,0.15); font-size: 0.65rem; letter-spacing: 1px; font-weight: 300; }
 
-/* ================================
-   页脚
-   ================================ */
-.footer { text-align: center; padding: 24px 20px 32px; color: var(--text-muted); font-size: 0.75rem; letter-spacing: 1px; font-weight: 300; border-top: 1px solid rgba(0,0,0,0.05); }
+/* ===== 页脚 ===== */
+.footer { text-align: center; padding: 20px 20px 28px; color: var(--text-muted); font-size: 0.75rem; letter-spacing: 1px; font-weight: 300; border-top: 1px solid rgba(0,0,0,0.05); }
 
-/* ================================
-   动画
-   ================================ */
-@keyframes cardIn {
-    from { opacity: 0; transform: translateY(30px) scale(0.95) translateZ(0); }
-    to   { opacity: 1; transform: translateY(0) scale(1) translateZ(0); }
-}
-@keyframes shimmer {
-    0%   { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
-}
+/* ===== 动画 ===== */
+@keyframes cardIn { from { opacity: 0; transform: translateY(20px) scale(0.95) translateZ(0); } to { opacity: 1; transform: translateY(0) scale(1) translateZ(0); } }
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
-/* ================================
-   响应式
-   ================================ */
-@media (max-width: 1024px) {
-    .gallery-grid { grid-template-columns: repeat(3, 1fr); }
-    .site-title { font-size: 2.6rem; }
-}
+/* ===== 响应式 ===== */
+@media (max-width: 1024px) { .gallery-grid { grid-template-columns: repeat(3, 1fr); } .site-title { font-size: 2.4rem; } }
 @media (max-width: 720px) {
     .gallery-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
-    .header { padding: 50px 16px 44px; }
+    .header { padding: 45px 16px 36px; }
     .site-title { font-size: 2rem; letter-spacing: 4px; }
     .site-desc { font-size: 0.85rem; letter-spacing: 3px; }
     .filter-btn { padding: 5px 14px; font-size: 0.78rem; margin: 3px 2px; }
-    /* 手机上关闭 3D 视差（性能 + UX） */
     .scene { perspective: none; }
     .scene__stage { transform: none !important; }
     .gallery-item { transform: none !important; }
+    .page-arrow { width: 38px; height: 38px; font-size: 1rem; }
+    .page-dot { width: 6px; height: 6px; }
+    .pagination-bar { gap: 12px; padding: 12px 0 22px; }
     .lb-prev { left: 6px; } .lb-next { right: 6px; }
     .lb-nav { font-size: 1rem; padding: 10px 7px; }
     .lb-close { top: -38px; right: 0; font-size: 1.6rem; }
 }
-@media (max-width: 440px) {
-    .gallery-grid { grid-template-columns: 1fr; gap: 14px; }
-    .site-title { font-size: 1.6rem; }
-}
+@media (max-width: 440px) { .gallery-grid { grid-template-columns: 1fr; gap: 14px; } .site-title { font-size: 1.6rem; } }
 </style>
 </head>
 <body>
@@ -301,7 +223,22 @@ img { display: block; max-width: 100%; }
 <!-- ===== 3D 视差场景 ===== -->
 <div class="scene" id="scene">
     <div class="scene__stage" id="stage">
-        <div class="gallery-grid" id="galleryGrid"></div>
+
+        <!-- ===== 分页容器 ===== -->
+        <div class="paginator" id="paginator">
+            <div class="paginator__track" id="track">
+                <!-- 由 JS 动态生成各页 -->
+            </div>
+        </div>
+
+        <!-- ===== 翻页控件 ===== -->
+        <div class="pagination-bar">
+            <button class="page-arrow" id="prevPage" aria-label="上一页">&#10094;</button>
+            <div class="page-dots" id="pageDots"></div>
+            <span class="page-indicator" id="pageIndicator">1 / 5</span>
+            <button class="page-arrow" id="nextPage" aria-label="下一页">&#10095;</button>
+        </div>
+
     </div>
 </div>
 
@@ -334,12 +271,22 @@ var TAG_LABEL = { nature: '🌿 自然', city: '🏙️ 城市', people: '👤 �
 var SKELS = ['skel-h','skel-v','skel-sq','skel-w'];
 
 // =============================================
-//  2. DOM
+//  2. 配置
 // =============================================
-var gridEl = document.getElementById('galleryGrid');
+var PER_PAGE = 8; // 每页显示 8 张
+
+// =============================================
+//  3. DOM
+// =============================================
+var track = document.getElementById('track');
 var scene = document.getElementById('scene');
 var stage = document.getElementById('stage');
 var filterBtns = document.querySelectorAll('.filter-btn');
+var prevBtn = document.getElementById('prevPage');
+var nextBtn = document.getElementById('nextPage');
+var pageDots = document.getElementById('pageDots');
+var pageIndicator = document.getElementById('pageIndicator');
+
 var lb = document.getElementById('lightbox');
 var lbImg = document.getElementById('lbImage');
 var lbTitle = document.getElementById('lbTitle');
@@ -349,181 +296,190 @@ var lbPrev = document.getElementById('lbPrev');
 var lbNext = document.getElementById('lbNext');
 
 var currentFilter = 'all';
-var currentIndex = 0;
+var currentPage = 0;
+var totalPages = 0;
 var filtered = [];
-var cards = [];         // 当前卡片 DOM 数组
-var cardZ = [];         // 每张卡片的 translateZ 基准值
-var isMobile = window.innerWidth <= 720;
+var cardZ = [];
 
 // =============================================
-//  3. 渲染
+//  4. 渲染分页
 // =============================================
 function render(filter) {
     filter = filter || 'all';
     currentFilter = filter;
-    filtered = filter === 'all' ? PHOTOS.slice() : PHOTOS.filter(function(p) { return p.tag === filter; });
-    gridEl.innerHTML = '';
+    currentPage = 0;
 
+    filtered = filter === 'all' ? PHOTOS.slice() : PHOTOS.filter(function(p) { return p.tag === filter; });
+    totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
+
+    track.innerHTML = '';
     cardZ = [];
 
-    filtered.forEach(function(photo, idx) {
-        var item = document.createElement('div');
-        item.className = 'gallery-item';
-        item.style.animationDelay = (idx * 0.035) + 's';
+    // 逐页生成
+    for (var p = 0; p < totalPages; p++) {
+        var pageDiv = document.createElement('div');
+        pageDiv.className = 'paginator__page';
 
-        var sk = SKELS[photo.id % SKELS.length];
-        var wrap = document.createElement('div');
-        wrap.className = 'img-wrapper';
+        var grid = document.createElement('div');
+        grid.className = 'gallery-grid';
 
-        var skeleton = document.createElement('div');
-        skeleton.className = 'skeleton ' + sk;
+        var start = p * PER_PAGE;
+        var end = Math.min(start + PER_PAGE, filtered.length);
 
-        var img = document.createElement('img');
-        img.src = photo.src;
-        img.alt = photo.title;
-        img.loading = 'lazy';
-        img.style.opacity = '0';
+        for (var idx = start; idx < end; idx++) {
+            var photo = filtered[idx];
+            var item = document.createElement('div');
+            item.className = 'gallery-item';
+            item.style.animationDelay = ((idx - start) * 0.04) + 's';
 
-        img.addEventListener('load', function() {
-            wrap.classList.add('loaded');
-            img.style.opacity = '1';
-            img.style.transition = 'opacity 0.5s ease';
-        });
-        img.addEventListener('error', function() {
-            wrap.classList.add('loaded');
-            img.style.opacity = '0.3';
-        });
+            var sk = SKELS[photo.id % SKELS.length];
+            var wrap = document.createElement('div');
+            wrap.className = 'img-wrapper';
 
-        wrap.appendChild(skeleton);
-        wrap.appendChild(img);
+            var skeleton = document.createElement('div');
+            skeleton.className = 'skeleton ' + sk;
 
-        var overlay = document.createElement('div');
-        overlay.className = 'overlay';
-        overlay.innerHTML =
-            '<span class="view-hint">👁 查看大图</span>' +
-            '<div class="photo-title">' + esc(photo.title) + '</div>' +
-            '<span class="photo-tag">' + (TAG_LABEL[photo.tag] || photo.tag) + '</span>';
+            var img = document.createElement('img');
+            img.src = photo.src;
+            img.alt = photo.title;
+            img.loading = 'lazy';
+            img.style.opacity = '0';
 
-        item.appendChild(wrap);
-        item.appendChild(overlay);
-        item.addEventListener('click', function() { openLB(idx); });
+            img.addEventListener('load', function() {
+                wrap.classList.add('loaded');
+                img.style.opacity = '1';
+                img.style.transition = 'opacity 0.5s ease';
+            });
+            img.addEventListener('error', function() {
+                wrap.classList.add('loaded');
+                img.style.opacity = '0.3';
+            });
 
-        gridEl.appendChild(item);
+            wrap.appendChild(skeleton);
+            wrap.appendChild(img);
 
-        // 给每张卡片分配一个错落的 translateZ 深度值（-30 ~ +40px）
-        // 这样在全局倾斜时产生视差深度感
-        var zBase = ((photo.id * 7 + 13) % 70) - 30; // 范围 -30 ~ +39
-        cardZ.push(zBase);
-    });
+            var overlay = document.createElement('div');
+            overlay.className = 'overlay';
+            overlay.innerHTML =
+                '<span class="view-hint">👁 查看大图</span>' +
+                '<div class="photo-title">' + esc(photo.title) + '</div>' +
+                '<span class="photo-tag">' + (TAG_LABEL[photo.tag] || photo.tag) + '</span>';
 
-    // 初次赋予 Z 深度
-    updateCardZ();
+            item.appendChild(wrap);
+            item.appendChild(overlay);
 
-    // 存储卡片引用
-    cards = document.querySelectorAll('.gallery-item');
+            // 点击打开 lightbox（用全局索引）
+            item.addEventListener(function(globalIdx) {
+                return function() { openLB(globalIdx); };
+            }(idx));
+
+            grid.appendChild(item);
+
+            // Z 深度
+            var zBase = ((photo.id * 7 + 13) % 70) - 30;
+            cardZ.push(zBase);
+        }
+
+        pageDiv.appendChild(grid);
+        track.appendChild(pageDiv);
+    }
+
+    // 更新 Z 深度
+    applyCardZ();
+
+    // 切换到第一页
+    goToPage(0);
+    updatePaginationUI();
+
+    // 绑定卡片 hover
+    bindCardHover();
 }
 
 function esc(s) { var d = document.createElement('div'); d.appendChild(document.createTextNode(s)); return d.innerHTML; }
 
-// 批量更新卡片 Z 轴（不含 hover 提升）
-function updateCardZ() {
+function applyCardZ() {
     var all = document.querySelectorAll('.gallery-item');
     all.forEach(function(el, i) {
         if (!el.classList.contains('lifted')) {
-            var z = cardZ[i] || 0;
-            el.style.transform = 'translateZ(' + z + 'px)';
+            el.style.transform = 'translateZ(' + (cardZ[i] || 0) + 'px)';
         }
     });
 }
 
 // =============================================
-//  4. 全局滑移 3D 视差
+//  5. 翻页
 // =============================================
-// 核心逻辑：
-//   鼠标在 scene 内移动 → 计算相对中心点的偏移（-1 ~ +1）
-//   → 应用到 stage: rotateX(上下)  rotateY(左右)  translateX  translateY
-//   → 每个卡片因 translateZ 不同而产生视差错落
-//   使用 requestAnimationFrame 节流 + 缓动系数实现流畅跟随
+function goToPage(n) {
+    currentPage = Math.max(0, Math.min(n, totalPages - 1));
+    var offset = -currentPage * 100;
+    track.style.transform = 'translateX(' + offset + '%)';
+    updatePaginationUI();
+}
 
+function updatePaginationUI() {
+    // 箭头状态
+    prevBtn.disabled = currentPage <= 0;
+    nextBtn.disabled = currentPage >= totalPages - 1;
+
+    // 圆点
+    pageDots.innerHTML = '';
+    for (var i = 0; i < totalPages; i++) {
+        var dot = document.createElement('span');
+        dot.className = 'page-dot' + (i === currentPage ? ' active' : '');
+        dot.addEventListener('click', function(p) { return function() { goToPage(p); }; }(i));
+        pageDots.appendChild(dot);
+    }
+
+    // 文字指示
+    pageIndicator.textContent = (currentPage + 1) + ' / ' + totalPages;
+}
+
+// 翻页事件
+prevBtn.addEventListener('click', function() { if (currentPage > 0) goToPage(currentPage - 1); });
+nextBtn.addEventListener('click', function() { if (currentPage < totalPages - 1) goToPage(currentPage + 1); });
+
+// 键盘翻页
+document.addEventListener('keydown', function(e) {
+    // 如果 lightbox 开着，由 lightbox 处理
+    if (lb.classList.contains('open')) return;
+    if (e.key === 'ArrowLeft') { e.preventDefault(); if (currentPage > 0) goToPage(currentPage - 1); }
+    if (e.key === 'ArrowRight') { e.preventDefault(); if (currentPage < totalPages - 1) goToPage(currentPage + 1); }
+});
+
+// =============================================
+//  6. 全局 3D 滑移视差
+// =============================================
 (function() {
-    var targetRX = 0, targetRY = 0, targetTX = 0, targetTY = 0;
-    var currentRX = 0, currentRY = 0, currentTX = 0, currentTY = 0;
-    var animId = null;
-    var isEnabled = window.innerWidth > 720;
-
-    // 最大旋转角度
-    var MAX_ROTATE = 6;   // deg
-    var MAX_TRANSLATE = 12; // px
+    var tRX = 0, tRY = 0, tTX = 0, tTY = 0;
+    var cRX = 0, cRY = 0, cTX = 0, cTY = 0;
+    var aid = null;
+    var enabled = window.innerWidth > 720;
+    var MAX_R = 5, MAX_T = 10;
 
     function onMove(e) {
-        if (!isEnabled) return;
+        if (!enabled) return;
         var rect = scene.getBoundingClientRect();
         var cx = rect.left + rect.width / 2;
         var cy = rect.top + rect.height / 2;
-        // 归一化 -1 ~ +1
-        var nx = (e.clientX - cx) / (rect.width / 2);
-        var ny = (e.clientY - cy) / (rect.height / 2);
-        // 限制范围
-        nx = Math.max(-1, Math.min(1, nx));
-        ny = Math.max(-1, Math.min(1, ny));
-
-        // 用平方使中心区更平缓，边缘更灵敏
-        var sx = nx * Math.abs(nx);
-        var sy = ny * Math.abs(ny);
-
-        targetRY = sx * MAX_ROTATE;
-        targetRX = sy * -MAX_ROTATE;
-        targetTX = sx * MAX_TRANSLATE;
-        targetTY = sy * MAX_TRANSLATE;
-
-        if (!animId) animId = requestAnimationFrame(tick);
+        var nx = Math.max(-1, Math.min(1, (e.clientX - cx) / (rect.width / 2)));
+        var ny = Math.max(-1, Math.min(1, (e.clientY - cy) / (rect.height / 2)));
+        var sx = nx * Math.abs(nx), sy = ny * Math.abs(ny);
+        tRY = sx * MAX_R; tRX = sy * -MAX_R;
+        tTX = sx * MAX_T; tTY = sy * MAX_T;
+        if (!aid) aid = requestAnimationFrame(tick);
     }
 
     function tick() {
-        // 缓动插值（惯性感）
-        var ease = 0.12;
-        currentRX += (targetRX - currentRX) * ease;
-        currentRY += (targetRY - currentRY) * ease;
-        currentTX += (targetTX - currentTX) * ease;
-        currentTY += (targetTY - currentTY) * ease;
-
-        stage.style.transform =
-            'rotateX(' + currentRX + 'deg) ' +
-            'rotateY(' + currentRY + 'deg) ' +
-            'translateX(' + currentTX + 'px) ' +
-            'translateY(' + currentTY + 'px)';
-
-        // 继续动画直到接近目标
-        var dx = Math.abs(targetRX - currentRX);
-        var dy = Math.abs(targetRY - currentRY);
-        if (dx > 0.01 || dy > 0.01) {
-            animId = requestAnimationFrame(tick);
-        } else {
-            // 定格到目标值
-            currentRX = targetRX; currentRY = targetRY;
-            currentTX = targetTX; currentTY = targetTY;
-            stage.style.transform =
-                'rotateX(' + currentRX + 'deg) ' +
-                'rotateY(' + currentRY + 'deg) ' +
-                'translateX(' + currentTX + 'px) ' +
-                'translateY(' + currentTY + 'px)';
-            animId = null;
-        }
+        var e = 0.12;
+        cRX += (tRX - cRX) * e; cRY += (tRY - cRY) * e;
+        cTX += (tTX - cTX) * e; cTY += (tTY - cTY) * e;
+        stage.style.transform = 'rotateX(' + cRX + 'deg) rotateY(' + cRY + 'deg) translateX(' + cTX + 'px) translateY(' + cTY + 'px)';
+        if (Math.abs(tRX-cRX) > 0.01 || Math.abs(tRY-cRY) > 0.01) { aid = requestAnimationFrame(tick); }
+        else { cRX = tRX; cRY = tRY; cTX = tTX; cTY = tTY; stage.style.transform = 'rotateX(' + cRX + 'deg) rotateY(' + cRY + 'deg) translateX(' + cTX + 'px) translateY(' + cTY + 'px)'; aid = null; }
     }
 
-    function onLeave() {
-        targetRX = 0; targetRY = 0; targetTX = 0; targetTY = 0;
-        if (!animId) animId = requestAnimationFrame(tick);
-    }
-
-    function onResize() {
-        isEnabled = window.innerWidth > 720;
-        if (!isEnabled) {
-            stage.style.transform = '';
-            currentRX = currentRY = currentTX = currentTY = 0;
-            targetRX = targetRY = targetTX = targetTY = 0;
-        }
-    }
+    function onLeave() { tRX = 0; tRY = 0; tTX = 0; tTY = 0; if (!aid) aid = requestAnimationFrame(tick); }
+    function onResize() { enabled = window.innerWidth > 720; if (!enabled) { stage.style.transform = ''; cRX = cRY = cTX = cTY = 0; tRX = tRY = tTX = tTY = 0; } }
 
     scene.addEventListener('mousemove', onMove);
     scene.addEventListener('mouseleave', onLeave);
@@ -531,54 +487,29 @@ function updateCardZ() {
 })();
 
 // =============================================
-//  5. 卡片悬浮：Z 提升 + 阴影 + 视差修正
+//  7. 卡片悬浮提升
 // =============================================
-// 当鼠标悬停在一张卡片上时：
-//   该卡片 translateZ 额外增加 40~50px（提升）
-//   阴影加深
-//   周边相邻卡片的视差微调，产生"涟漪"感
-// 鼠标离开后平滑复位
-
-(function() {
-    function bindHover() {
-        document.querySelectorAll('.gallery-item').forEach(function(el, idx) {
-            el.addEventListener('mouseenter', function() {
-                var baseZ = cardZ[idx] || 0;
-                // 提升 +45px，同时加大阴影
-                el.style.transform = 'translateZ(' + (baseZ + 45) + 'px)';
-                el.style.boxShadow = '0 30px 60px rgba(0,0,0,0.25)';
-                el.classList.add('lifted');
-            });
-            el.addEventListener('mouseleave', function() {
-                var baseZ = cardZ[idx] || 0;
-                el.style.transform = 'translateZ(' + baseZ + 'px)';
-                el.style.boxShadow = '';
-                el.classList.remove('lifted');
-            });
+function bindCardHover() {
+    document.querySelectorAll('.gallery-item').forEach(function(el, idx) {
+        el.addEventListener('mouseenter', function() {
+            var z = cardZ[idx] || 0;
+            el.style.transition = 'transform 0.4s cubic-bezier(0.22,1,0.36,1), box-shadow 0.4s ease';
+            el.style.transform = 'translateZ(' + (z + 45) + 'px)';
+            el.style.boxShadow = '0 30px 60px rgba(0,0,0,0.25)';
+            el.classList.add('lifted');
         });
-    }
-
-    // 每次 render 后重新绑定
-    var origRender = render;
-    render = function(filter) {
-        origRender(filter);
-        bindHover();
-    };
-    render('all');
-    // 首次额外绑定（因为渲染时已经调了 render('all')，但 origRender 还没被替换，所以手动补一次）
-    // 其实上面已经调了 render('all') 所以没问题
-    // 但我们需要在初始加载时也绑定
-    // 直接调用 bindHover 会被上面的覆盖，用 setTimeout 确保
-    setTimeout(bindHover, 100);
-})();
+        el.addEventListener('mouseleave', function() {
+            var z = cardZ[idx] || 0;
+            el.style.transition = 'transform 0.4s cubic-bezier(0.22,1,0.36,1), box-shadow 0.4s ease';
+            el.style.transform = 'translateZ(' + z + 'px)';
+            el.style.boxShadow = '';
+            el.classList.remove('lifted');
+        });
+    });
+}
 
 // =============================================
-//  6. 初始渲染（被上面覆盖了，但需要首次绑定）
-// =============================================
-// 由于上面 IIFE 中执行了 render('all')，OK
-
-// =============================================
-//  7. Lightbox
+//  8. Lightbox
 // =============================================
 function openLB(idx) {
     currentIndex = idx;
@@ -592,10 +523,10 @@ function openLB(idx) {
 function closeLB() { lb.classList.remove('open'); document.body.style.overflow = ''; }
 function prevP() { if (!filtered.length) return; currentIndex = (currentIndex - 1 + filtered.length) % filtered.length; syncLB(); }
 function nextP() { if (!filtered.length) return; currentIndex = (currentIndex + 1) % filtered.length; syncLB(); }
-function syncLB() { var p = filtered[currentIndex]; if (p) { lbImg.src = p.src; lbImg.alt = p.title; lbTitle.textContent = p.title + ' · ' + (TAG_LABEL[p.tag] || p.tag); lbCounter.textContent = (currentIndex + 1) + ' / ' + filtered.length; } }
+function syncLB() { var p = filtered[currentIndex]; if (p) { lbImg.src=p.src; lbImg.alt=p.title; lbTitle.textContent=p.title+' · '+(TAG_LABEL[p.tag]||p.tag); lbCounter.textContent=(currentIndex+1)+' / '+filtered.length; } }
 
 // =============================================
-//  8. 事件绑定
+//  9. 事件绑定
 // =============================================
 filterBtns.forEach(function(btn) {
     btn.addEventListener('click', function() {
@@ -616,6 +547,11 @@ document.addEventListener('keydown', function(e) {
     if (e.key === 'ArrowLeft') { e.preventDefault(); prevP(); return; }
     if (e.key === 'ArrowRight') { e.preventDefault(); nextP(); return; }
 });
+
+// =============================================
+//  10. 启动
+// =============================================
+render('all');
 </script>
 
 </body>
