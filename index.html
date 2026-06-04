@@ -368,10 +368,10 @@ function render(filter) {
             item.appendChild(wrap);
             item.appendChild(overlay);
 
-            // 点击打开 lightbox（用全局索引）
-            item.addEventListener(function(globalIdx) {
+            // 点击打开 lightbox（用闭包保存全局索引）
+            item.addEventListener('click', (function(globalIdx) {
                 return function() { openLB(globalIdx); };
-            }(idx));
+            })(idx));
 
             grid.appendChild(item);
 
