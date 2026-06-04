@@ -40,33 +40,11 @@ img { display: block; max-width: 100%; }
 .scene__stage { transform-style: preserve-3d; will-change: transform; transition: transform 0.08s cubic-bezier(0.22,1,0.36,1); max-width: 1340px; margin: 0 auto; padding: 0 16px; }
 
 /* ===== 分页容器 ===== */
-.paginator {
-    position: relative;
-    overflow: hidden;
-    margin: 12px 0 0;
-    border-radius: var(--radius);
-}
+.paginator { position: relative; overflow: hidden; margin: 12px 0 0; border-radius: var(--radius); }
+.paginator__track { display: flex; transition: transform 0.55s cubic-bezier(0.22,1,0.36,1); will-change: transform; }
+.paginator__page { flex: 0 0 100%; min-width: 0; }
 
-/* 滑动轨道 — 横向放置所有页面 */
-.paginator__track {
-    display: flex;
-    transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
-    will-change: transform;
-}
-
-/* 每一页 = 一个网格 */
-.paginator__page {
-    flex: 0 0 100%;
-    min-width: 0;
-}
-
-.gallery-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: var(--gap);
-    padding: 6px 0 10px;
-    transform-style: preserve-3d;
-}
+.gallery-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--gap); padding: 6px 0 10px; transform-style: preserve-3d; }
 
 /* ===== 照片卡片 ===== */
 .gallery-item { position: relative; border-radius: var(--radius); overflow: hidden; cursor: pointer; background: var(--surface); transform-style: preserve-3d; will-change: transform; transition: box-shadow 0.5s cubic-bezier(0.22,1,0.36,1), transform 0.5s cubic-bezier(0.22,1,0.36,1); animation: cardIn 0.5s ease both; }
@@ -90,73 +68,15 @@ img { display: block; max-width: 100%; }
 .gallery-item:hover .view-hint { opacity: 1; transform: translate(-50%,-50%) scale(1); }
 
 /* ===== 翻页控件 ===== */
-.pagination-bar {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 18px;
-    padding: 16px 0 30px;
-}
-
-/* 箭头按钮 */
-.page-arrow {
-    width: 44px; height: 44px;
-    border-radius: 50%;
-    border: 1.5px solid #e0e0e4;
-    background: var(--surface);
-    color: var(--text-light);
-    font-size: 1.1rem;
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    transition: background 0.25s, border-color 0.25s, color 0.25s, box-shadow 0.25s, transform 0.25s;
-    font-family: var(--font);
-    user-select: none;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-}
-.page-arrow:hover {
-    border-color: var(--accent);
-    color: var(--accent);
-    box-shadow: 0 4px 16px rgba(79,70,229,0.15);
-    transform: scale(1.05);
-}
-.page-arrow:active {
-    transform: scale(0.95);
-}
-.page-arrow:disabled {
-    opacity: 0.25;
-    cursor: not-allowed;
-    transform: none !important;
-    box-shadow: none !important;
-}
-
-/* 页码指示 */
-.page-indicator {
-    font-size: 0.85rem;
-    font-weight: 500;
-    color: var(--text-light);
-    letter-spacing: 0.5px;
-    min-width: 70px;
-    text-align: center;
-    font-variant-numeric: tabular-nums;
-}
-
-/* 页数圆点 */
-.page-dots {
-    display: flex;
-    gap: 6px;
-    align-items: center;
-}
-.page-dot {
-    width: 7px; height: 7px;
-    border-radius: 50%;
-    background: #d4d4d8;
-    transition: background 0.3s, transform 0.3s;
-    cursor: pointer;
-}
-.page-dot.active {
-    background: var(--accent);
-    transform: scale(1.3);
-}
+.pagination-bar { display: flex; align-items: center; justify-content: center; gap: 18px; padding: 16px 0 30px; }
+.page-arrow { width: 44px; height: 44px; border-radius: 50%; border: 1.5px solid #e0e0e4; background: var(--surface); color: var(--text-light); font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.25s, border-color 0.25s, color 0.25s, box-shadow 0.25s, transform 0.25s; font-family: var(--font); user-select: none; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+.page-arrow:hover { border-color: var(--accent); color: var(--accent); box-shadow: 0 4px 16px rgba(79,70,229,0.15); transform: scale(1.05); }
+.page-arrow:active { transform: scale(0.95); }
+.page-arrow:disabled { opacity: 0.25; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+.page-indicator { font-size: 0.85rem; font-weight: 500; color: var(--text-light); letter-spacing: 0.5px; min-width: 70px; text-align: center; font-variant-numeric: tabular-nums; }
+.page-dots { display: flex; gap: 6px; align-items: center; }
+.page-dot { width: 7px; height: 7px; border-radius: 50%; background: #d4d4d8; transition: background 0.3s, transform 0.3s; cursor: pointer; }
+.page-dot.active { background: var(--accent); transform: scale(1.3); }
 
 /* ===== Lightbox ===== */
 .lightbox { position: fixed; inset: 0; z-index: 999; background: rgba(0,0,0,0.78); backdrop-filter: blur(24px); display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.4s ease; }
@@ -223,22 +143,15 @@ img { display: block; max-width: 100%; }
 <!-- ===== 3D 视差场景 ===== -->
 <div class="scene" id="scene">
     <div class="scene__stage" id="stage">
-
-        <!-- ===== 分页容器 ===== -->
         <div class="paginator" id="paginator">
-            <div class="paginator__track" id="track">
-                <!-- 由 JS 动态生成各页 -->
-            </div>
+            <div class="paginator__track" id="track"></div>
         </div>
-
-        <!-- ===== 翻页控件 ===== -->
         <div class="pagination-bar">
             <button class="page-arrow" id="prevPage" aria-label="上一页">&#10094;</button>
             <div class="page-dots" id="pageDots"></div>
             <span class="page-indicator" id="pageIndicator">1 / 5</span>
             <button class="page-arrow" id="nextPage" aria-label="下一页">&#10095;</button>
         </div>
-
     </div>
 </div>
 
@@ -260,9 +173,7 @@ img { display: block; max-width: 100%; }
 <footer class="footer"><span>Made with ❤️ &middot; Powered by GitHub Pages</span></footer>
 
 <script>
-// =============================================
-//  1. 照片数据
-// =============================================
+// ===== 1. 照片数据 =====
 var PHOTOS = [];
 for (var i = 1; i <= 33; i++) {
     PHOTOS.push({ id: i, src: 'images/' + i + '.jpg', title: '照片 ' + i, tag: 'nature' });
@@ -270,14 +181,9 @@ for (var i = 1; i <= 33; i++) {
 var TAG_LABEL = { nature: '🌿 自然', city: '🏙️ 城市', people: '👤 人物', animal: '🐾 动物' };
 var SKELS = ['skel-h','skel-v','skel-sq','skel-w'];
 
-// =============================================
-//  2. 配置
-// =============================================
-var PER_PAGE = 8; // 每页显示 8 张
+// ===== 2. 配置 & DOM =====
+var PER_PAGE = 8;
 
-// =============================================
-//  3. DOM
-// =============================================
 var track = document.getElementById('track');
 var scene = document.getElementById('scene');
 var stage = document.getElementById('stage');
@@ -301,9 +207,55 @@ var totalPages = 0;
 var filtered = [];
 var cardZ = [];
 
-// =============================================
-//  4. 渲染分页
-// =============================================
+// ===== 3. 辅助函数：创建单张照片卡片 =====
+function createPhotoCard(photo, globalIdx, startIdx) {
+    var item = document.createElement('div');
+    item.className = 'gallery-item';
+    item.style.animationDelay = ((globalIdx - startIdx) * 0.04) + 's';
+
+    var sk = SKELS[photo.id % SKELS.length];
+    var wrap = document.createElement('div');
+    wrap.className = 'img-wrapper';
+
+    var skeleton = document.createElement('div');
+    skeleton.className = 'skeleton ' + sk;
+
+    var img = document.createElement('img');
+    img.src = photo.src;
+    img.alt = photo.title;
+    img.loading = 'lazy';
+    img.style.opacity = '0';
+
+    // 在独立函数作用域中捕获 wrap 和 img
+    img.addEventListener('load', function(w, i) {
+        return function() { w.classList.add('loaded'); i.style.opacity = '1'; i.style.transition = 'opacity 0.5s ease'; };
+    }(wrap, img));
+    img.addEventListener('error', function(w, i) {
+        return function() { w.classList.add('loaded'); i.style.opacity = '0.3'; };
+    }(wrap, img));
+
+    wrap.appendChild(skeleton);
+    wrap.appendChild(img);
+
+    var overlay = document.createElement('div');
+    overlay.className = 'overlay';
+    overlay.innerHTML =
+        '<span class="view-hint">👁 查看大图</span>' +
+        '<div class="photo-title">' + esc(photo.title) + '</div>' +
+        '<span class="photo-tag">' + (TAG_LABEL[photo.tag] || photo.tag) + '</span>';
+
+    item.appendChild(wrap);
+    item.appendChild(overlay);
+
+    // 点击事件也用闭包保证正确索引
+    item.addEventListener('click', (function(gi) { return function() { openLB(gi); }; })(globalIdx));
+
+    return item;
+}
+
+function esc(s) { var d = document.createElement('div'); d.appendChild(document.createTextNode(s)); return d.innerHTML; }
+
+// ===== 4. 渲染分页 =====
 function render(filter) {
     filter = filter || 'all';
     currentFilter = filter;
@@ -315,7 +267,6 @@ function render(filter) {
     track.innerHTML = '';
     cardZ = [];
 
-    // 逐页生成
     for (var p = 0; p < totalPages; p++) {
         var pageDiv = document.createElement('div');
         pageDiv.className = 'paginator__page';
@@ -328,54 +279,8 @@ function render(filter) {
 
         for (var idx = start; idx < end; idx++) {
             var photo = filtered[idx];
-            var item = document.createElement('div');
-            item.className = 'gallery-item';
-            item.style.animationDelay = ((idx - start) * 0.04) + 's';
-
-            var sk = SKELS[photo.id % SKELS.length];
-            var wrap = document.createElement('div');
-            wrap.className = 'img-wrapper';
-
-            var skeleton = document.createElement('div');
-            skeleton.className = 'skeleton ' + sk;
-
-            var img = document.createElement('img');
-            img.src = photo.src;
-            img.alt = photo.title;
-            img.loading = 'lazy';
-            img.style.opacity = '0';
-
-            img.addEventListener('load', function() {
-                wrap.classList.add('loaded');
-                img.style.opacity = '1';
-                img.style.transition = 'opacity 0.5s ease';
-            });
-            img.addEventListener('error', function() {
-                wrap.classList.add('loaded');
-                img.style.opacity = '0.3';
-            });
-
-            wrap.appendChild(skeleton);
-            wrap.appendChild(img);
-
-            var overlay = document.createElement('div');
-            overlay.className = 'overlay';
-            overlay.innerHTML =
-                '<span class="view-hint">👁 查看大图</span>' +
-                '<div class="photo-title">' + esc(photo.title) + '</div>' +
-                '<span class="photo-tag">' + (TAG_LABEL[photo.tag] || photo.tag) + '</span>';
-
-            item.appendChild(wrap);
-            item.appendChild(overlay);
-
-            // 点击打开 lightbox（用闭包保存全局索引）
-            item.addEventListener('click', (function(globalIdx) {
-                return function() { openLB(globalIdx); };
-            })(idx));
-
+            var item = createPhotoCard(photo, idx, start);
             grid.appendChild(item);
-
-            // Z 深度
             var zBase = ((photo.id * 7 + 13) % 70) - 30;
             cardZ.push(zBase);
         }
@@ -384,71 +289,77 @@ function render(filter) {
         track.appendChild(pageDiv);
     }
 
-    // 更新 Z 深度
     applyCardZ();
-
-    // 切换到第一页
     goToPage(0);
     updatePaginationUI();
-
-    // 绑定卡片 hover
     bindCardHover();
 }
 
-function esc(s) { var d = document.createElement('div'); d.appendChild(document.createTextNode(s)); return d.innerHTML; }
-
 function applyCardZ() {
     var all = document.querySelectorAll('.gallery-item');
-    all.forEach(function(el, i) {
-        if (!el.classList.contains('lifted')) {
-            el.style.transform = 'translateZ(' + (cardZ[i] || 0) + 'px)';
+    for (var i = 0; i < all.length; i++) {
+        if (!all[i].classList.contains('lifted')) {
+            all[i].style.transform = 'translateZ(' + (cardZ[i] || 0) + 'px)';
         }
-    });
+    }
 }
 
-// =============================================
-//  5. 翻页
-// =============================================
+// ===== 5. 翻页 =====
 function goToPage(n) {
     currentPage = Math.max(0, Math.min(n, totalPages - 1));
-    var offset = -currentPage * 100;
-    track.style.transform = 'translateX(' + offset + '%)';
+    track.style.transform = 'translateX(' + (-currentPage * 100) + '%)';
     updatePaginationUI();
 }
 
 function updatePaginationUI() {
-    // 箭头状态
     prevBtn.disabled = currentPage <= 0;
     nextBtn.disabled = currentPage >= totalPages - 1;
 
-    // 圆点
     pageDots.innerHTML = '';
     for (var i = 0; i < totalPages; i++) {
         var dot = document.createElement('span');
         dot.className = 'page-dot' + (i === currentPage ? ' active' : '');
-        dot.addEventListener('click', function(p) { return function() { goToPage(p); }; }(i));
+        dot.addEventListener('click', (function(p) { return function() { goToPage(p); }; })(i));
         pageDots.appendChild(dot);
     }
-
-    // 文字指示
     pageIndicator.textContent = (currentPage + 1) + ' / ' + totalPages;
 }
 
-// 翻页事件
 prevBtn.addEventListener('click', function() { if (currentPage > 0) goToPage(currentPage - 1); });
 nextBtn.addEventListener('click', function() { if (currentPage < totalPages - 1) goToPage(currentPage + 1); });
 
-// 键盘翻页
+function bindCardHover() {
+    var all = document.querySelectorAll('.gallery-item');
+    for (var i = 0; i < all.length; i++) {
+        all[i].addEventListener('mouseenter', (function(el, idx) {
+            return function() {
+                var z = cardZ[idx] || 0;
+                el.style.transition = 'transform 0.4s cubic-bezier(0.22,1,0.36,1), box-shadow 0.4s ease';
+                el.style.transform = 'translateZ(' + (z + 45) + 'px)';
+                el.style.boxShadow = '0 30px 60px rgba(0,0,0,0.25)';
+                el.classList.add('lifted');
+            };
+        })(all[i], i));
+        all[i].addEventListener('mouseleave', (function(el, idx) {
+            return function() {
+                var z = cardZ[idx] || 0;
+                el.style.transition = 'transform 0.4s cubic-bezier(0.22,1,0.36,1), box-shadow 0.4s ease';
+                el.style.transform = 'translateZ(' + z + 'px)';
+                el.style.boxShadow = '';
+                el.classList.remove('lifted');
+            };
+        })(all[i], i));
+    }
+}
+
+// ===== 6. 键盘翻页 =====
 document.addEventListener('keydown', function(e) {
-    // 如果 lightbox 开着，由 lightbox 处理
     if (lb.classList.contains('open')) return;
     if (e.key === 'ArrowLeft') { e.preventDefault(); if (currentPage > 0) goToPage(currentPage - 1); }
     if (e.key === 'ArrowRight') { e.preventDefault(); if (currentPage < totalPages - 1) goToPage(currentPage + 1); }
 });
 
-// =============================================
-//  6. 全局 3D 滑移视差
-// =============================================
+// ===== 7. 全局 3D 滑移 =====
 (function() {
     var tRX = 0, tRY = 0, tTX = 0, tTY = 0;
     var cRX = 0, cRY = 0, cTX = 0, cTY = 0;
@@ -468,49 +379,22 @@ document.addEventListener('keydown', function(e) {
         tTX = sx * MAX_T; tTY = sy * MAX_T;
         if (!aid) aid = requestAnimationFrame(tick);
     }
-
     function tick() {
         var e = 0.12;
         cRX += (tRX - cRX) * e; cRY += (tRY - cRY) * e;
         cTX += (tTX - cTX) * e; cTY += (tTY - cTY) * e;
         stage.style.transform = 'rotateX(' + cRX + 'deg) rotateY(' + cRY + 'deg) translateX(' + cTX + 'px) translateY(' + cTY + 'px)';
         if (Math.abs(tRX-cRX) > 0.01 || Math.abs(tRY-cRY) > 0.01) { aid = requestAnimationFrame(tick); }
-        else { cRX = tRX; cRY = tRY; cTX = tTX; cTY = tTY; stage.style.transform = 'rotateX(' + cRX + 'deg) rotateY(' + cRY + 'deg) translateX(' + cTX + 'px) translateY(' + cTY + 'px)'; aid = null; }
+        else { cRX=tRX; cRY=tRY; cTX=tTX; cTY=tTY; stage.style.transform = 'rotateX('+cRX+'deg) rotateY('+cRY+'deg) translateX('+cTX+'px) translateY('+cTY+'px)'; aid = null; }
     }
-
-    function onLeave() { tRX = 0; tRY = 0; tTX = 0; tTY = 0; if (!aid) aid = requestAnimationFrame(tick); }
-    function onResize() { enabled = window.innerWidth > 720; if (!enabled) { stage.style.transform = ''; cRX = cRY = cTX = cTY = 0; tRX = tRY = tTX = tTY = 0; } }
-
+    function onLeave() { tRX=0; tRY=0; tTX=0; tTY=0; if (!aid) aid = requestAnimationFrame(tick); }
+    function onResize() { enabled = window.innerWidth > 720; if (!enabled) { stage.style.transform = ''; cRX=cRY=cTX=cTY=0; tRX=tRY=tTX=tTY=0; } }
     scene.addEventListener('mousemove', onMove);
     scene.addEventListener('mouseleave', onLeave);
     window.addEventListener('resize', onResize);
 })();
 
-// =============================================
-//  7. 卡片悬浮提升
-// =============================================
-function bindCardHover() {
-    document.querySelectorAll('.gallery-item').forEach(function(el, idx) {
-        el.addEventListener('mouseenter', function() {
-            var z = cardZ[idx] || 0;
-            el.style.transition = 'transform 0.4s cubic-bezier(0.22,1,0.36,1), box-shadow 0.4s ease';
-            el.style.transform = 'translateZ(' + (z + 45) + 'px)';
-            el.style.boxShadow = '0 30px 60px rgba(0,0,0,0.25)';
-            el.classList.add('lifted');
-        });
-        el.addEventListener('mouseleave', function() {
-            var z = cardZ[idx] || 0;
-            el.style.transition = 'transform 0.4s cubic-bezier(0.22,1,0.36,1), box-shadow 0.4s ease';
-            el.style.transform = 'translateZ(' + z + 'px)';
-            el.style.boxShadow = '';
-            el.classList.remove('lifted');
-        });
-    });
-}
-
-// =============================================
-//  8. Lightbox
-// =============================================
+// ===== 8. Lightbox =====
 function openLB(idx) {
     currentIndex = idx;
     var p = filtered[idx]; if (!p) return;
@@ -525,9 +409,19 @@ function prevP() { if (!filtered.length) return; currentIndex = (currentIndex - 
 function nextP() { if (!filtered.length) return; currentIndex = (currentIndex + 1) % filtered.length; syncLB(); }
 function syncLB() { var p = filtered[currentIndex]; if (p) { lbImg.src=p.src; lbImg.alt=p.title; lbTitle.textContent=p.title+' · '+(TAG_LABEL[p.tag]||p.tag); lbCounter.textContent=(currentIndex+1)+' / '+filtered.length; } }
 
-// =============================================
-//  9. 事件绑定
-// =============================================
+// Lightbox 事件
+lbClose.addEventListener('click', closeLB);
+lb.addEventListener('click', function(e) { if (e.target === lb) closeLB(); });
+lbPrev.addEventListener('click', function(e) { e.stopPropagation(); prevP(); });
+lbNext.addEventListener('click', function(e) { e.stopPropagation(); nextP(); });
+document.addEventListener('keydown', function(e) {
+    if (!lb.classList.contains('open')) return;
+    if (e.key === 'Escape') { closeLB(); return; }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); prevP(); return; }
+    if (e.key === 'ArrowRight') { e.preventDefault(); nextP(); return; }
+});
+
+// ===== 9. 筛选 =====
 filterBtns.forEach(function(btn) {
     btn.addEventListener('click', function() {
         filterBtns.forEach(function(b) { b.classList.remove('active'); });
@@ -536,23 +430,8 @@ filterBtns.forEach(function(btn) {
     });
 });
 
-lbClose.addEventListener('click', closeLB);
-lb.addEventListener('click', function(e) { if (e.target === lb) closeLB(); });
-lbPrev.addEventListener('click', function(e) { e.stopPropagation(); prevP(); });
-lbNext.addEventListener('click', function(e) { e.stopPropagation(); nextP(); });
-
-document.addEventListener('keydown', function(e) {
-    if (!lb.classList.contains('open')) return;
-    if (e.key === 'Escape') { closeLB(); return; }
-    if (e.key === 'ArrowLeft') { e.preventDefault(); prevP(); return; }
-    if (e.key === 'ArrowRight') { e.preventDefault(); nextP(); return; }
-});
-
-// =============================================
-//  10. 启动
-// =============================================
+// ===== 10. 启动 =====
 render('all');
 </script>
-
 </body>
 </html>
