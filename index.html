@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📸 照片墙</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- ====== 头部 ====== -->
+    <header class="header">
+        <div class="container">
+            <h1 class="site-title">📸 照片墙</h1>
+            <p class="site-desc">用光影定格美好瞬间</p>
+        </div>
+    </header>
+
+    <!-- ====== 筛选标签 ====== -->
+    <section class="filters">
+        <div class="container">
+            <button class="filter-btn active" data-filter="all">全部</button>
+            <button class="filter-btn" data-filter="nature">自然</button>
+            <button class="filter-btn" data-filter="city">城市</button>
+            <button class="filter-btn" data-filter="people">人物</button>
+            <button class="filter-btn" data-filter="animal">动物</button>
+        </div>
+    </section>
+
+    <!-- ====== 照片墙网格 ====== -->
+    <main class="gallery">
+        <div class="container" id="gallery-grid">
+            <!-- 由 JS 动态生成 -->
+        </div>
+    </main>
+
+    <!-- ====== Lightbox 模态框 ====== -->
+    <div class="lightbox" id="lightbox">
+        <span class="lightbox-close">&times;</span>
+        <button class="lightbox-nav lightbox-prev">&#10094;</button>
+        <button class="lightbox-nav lightbox-next">&#10095;</button>
+        <div class="lightbox-content">
+            <img src="" alt="" id="lightbox-img">
+            <div class="lightbox-info">
+                <span id="lightbox-title"></span>
+                <span id="lightbox-counter"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====== 页脚 ====== -->
+    <footer class="footer">
+        <p>Made with ❤️ | Powered by GitHub Pages</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
